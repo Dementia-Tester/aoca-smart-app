@@ -104,12 +104,11 @@ fun WordRecall(onReturn: () -> Unit){
 
     // Phase manager for phase 2
     fun newRound(){
-        if(w1 == currentWords[0]){score+=1}
-        if(w2 == currentWords[1]){score+=1}
-        if(w3 == currentWords[2]){score+=1}
-        if(w4 == currentWords[3]){score+=1}
-        if(w5 == currentWords[4]){score+=1}
-        if(w6 == currentWords[5]){score+=1}
+        val wordInputs = listOf(w1, w2, w3, w4, w5, w6)
+        val wordsShown = round + 3 // Round 1 = 4 words, Round 2 = 5 words, Round 3 = 6 words
+        for (i in 0 until wordsShown) {
+            if (wordInputs[i] == currentWords[i]) { score += 1 }
+        }
         r1 = ""
         w1 = ""
         w2 = ""
