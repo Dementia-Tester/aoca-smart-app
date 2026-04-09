@@ -1,0 +1,62 @@
+name: iOS-deploy.yml
+run-name: Deploy iOS app to TestFlight for branch - ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_env:
+        description: 'Build environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+
+jobs:
+  build-and-upload:
+    runs-on: macos-15
+    steps:
+      # Check out the code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Install fastlane and cocoapods
+      - name: Install fastlane and CocoaPods
+        run: |
+          brew install fastlane cocoapods
+
+      # Generate podspec and dummy framework
+      - name: Generate podspec and dummy framework
+        run: |
+          ./gradlew :composeApp:podspec
+          ./gradlew :composeApp:generateDummyFramework
+
+      # Install all pod dependency's
+      - name: Install Pods
+        working-directory: iosApp
+        run: pod install --repo-update
+
+      # Add secret signing deploy key
+      - name: Add deploy key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SIGNING_REPO_DEPLOY_KEY }}
+
+      # Trust GitHubs SSH host keys
+      - name: Trust GitHubs SSH host keys
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -t rsa,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts
+
+      # Build the iOSApp and upload it to App Store Connect
+      - name: Build & Upload
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_BRANCH: ${{ secrets.MATCH_GIT_BRANCH }}
+          APP_IDENTIFIER: ${{ secrets.APP_IDENTIFIER }}
+          TESTFLIGHT_GROUPS: ${{ secrets.TESTFLIGHT_GROUPS }}
+        run: fastlane ios beta

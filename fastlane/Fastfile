@@ -1,0 +1,57 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload to TestFlight"
+  lane :beta do
+
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY_P8"],
+      is_key_content_base64: true
+    )
+
+    setup_ci
+
+    match(
+      type: "appstore",
+      app_identifier: [ENV["APP_IDENTIFIER"]],
+      git_url: ENV["MATCH_GIT_URL"],
+      readonly: true,
+      api_key: api_key,
+      git_branch: ENV["MATCH_GIT_BRANCH"] || "master"
+    )
+
+    build_app(
+      workspace: "iosApp/iosApp.xcworkspace",
+      scheme: "iosApp",
+      export_method: "app-store",
+      xcargs: "MARKETING_VERSION=#{lane_context[SharedValues::VERSION_NUMBER] || '3.0'} CURRENT_PROJECT_VERSION=#{ENV['GITHUB_RUN_NUMBER']}",
+      export_options: {
+        provisioningProfiles: {
+          ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]}"
+        }
+      }
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      groups: (ENV["TESTFLIGHT_GROUPS"] || "").split(","),
+      skip_submission: true,
+      skip_waiting_for_build_processing: false,
+      distribute_external: false
+    )
+  end
+
+  desc "Promote same build to App Store (after you add metadata)"
+  lane :submit_for_review do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY_P8"],
+      is_key_content_base64: true
+    )
+    # Add actions here if you want to automate metadata later
+  end
+end
+

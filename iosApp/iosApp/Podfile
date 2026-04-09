@@ -1,0 +1,13 @@
+platform :ios, '18.0'
+
+target 'iosApp' do
+  use_frameworks!
+  use_modular_headers!
+
+  pod 'ComposeApp', :path => '../composeApp'
+
+  pod 'FirebaseCore'
+  pod 'FirebaseAuth'
+  pod 'FirebaseDatabase'
+  
+end

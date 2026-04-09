@@ -1,0 +1,7 @@
+source 'https://cdn.cocoapods.org'
+platform :ios, '18.0'
+use_frameworks! :linkage => :static
+
+target 'iosApp' do
+  pod 'ComposeApp', :path => '../composeApp'
+end
