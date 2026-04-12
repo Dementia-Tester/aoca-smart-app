@@ -50,12 +50,15 @@ fun ProgressView() {
 
     var scoresExpanded by remember({ mutableStateOf(false) })
     var selectedScoreType by remember({ mutableStateOf("") })
-    val scoreTypes = listOf("Total Scores", "Language", "Perceptual-motor", "Executive Function", "Learning and Memory",
-        "Social Cognition", "Complex Attention", "Health Survey")
-
-    // "Complex Attention", "Executive Function" and "Learning and Memory" are the current minigames.
-    // "Language", "Perceptual-motor" and "Social Cognition" are placeholders from the previous
-    // version of the app for minigames that haven't been implemented yet.
+    // "Language", "Perceptual-motor" and "Social Cognition" are excluded until their
+    // corresponding minigames are implemented.
+    val scoreTypes = listOf(
+        "Total Scores",
+        "Complex Attention",
+        "Executive Function",
+        "Learning and Memory",
+        "Health Survey"
+    )
 
     var placeholder  by remember({ mutableStateOf("Select Results to Display") })
     var isLoading by remember { mutableStateOf(false) }
@@ -176,43 +179,19 @@ fun ProgressView() {
                             }
                         }
                         "Complex Attention" -> {
-                            // This is one of the implemented minigames
                             miniGameScoresService.getUserGameAttempts(userId, GameType.COMPLEX_ATTENTION) { result ->
                                 handleResult(result)
                             }
                         }
                         "Executive Function" -> {
-                            // This is one of the implemented minigames
                             miniGameScoresService.getUserGameAttempts(userId, GameType.EXECUTIVE_FUNCTION) { result ->
                                 handleResult(result)
                             }
                         }
                         "Learning and Memory" -> {
-                            // This is one of the implemented minigames
                             miniGameScoresService.getUserGameAttempts(userId, GameType.LEARNING_AND_MEMORY) { result ->
                                 handleResult(result)
                             }
-                        }
-                        "Language" -> {
-                        // This was not implemented in the original app,
-                            hasScores = false
-                            isLoading = false
-                            results = emptyList()
-                            errorMessage = "To be implemented in future versions"
-                        }
-                        "Perceptual-motor" -> {
-                        // This was not implemented in the original app
-                            hasScores = false
-                            isLoading = false
-                            results = emptyList()
-                            errorMessage = "To be implemented in future versions"
-                        }
-                        "Social Cognition" -> {
-                        // This was not implemented in the original app
-                            hasScores = false
-                            isLoading = false
-                            results = emptyList()
-                            errorMessage = "To be implemented in future versions"
                         }
                     }
                 }
@@ -250,4 +229,3 @@ fun ProgressView() {
         }
     }
 }
-
