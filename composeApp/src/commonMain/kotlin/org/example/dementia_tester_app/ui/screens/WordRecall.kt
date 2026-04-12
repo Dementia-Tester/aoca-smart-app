@@ -36,18 +36,19 @@ val words = arrayOf(
     "binary", "comet", "drizzle", "echo", "fractal", "glacier",
     "horizon", "isotope", "jigsaw", "krypton", "lunar", "mirage"
 )
+
 @Composable
 fun WordRecall(onReturn: () -> Unit){
-    var round by remember{mutableStateOf(1)}
-    var score by remember{mutableStateOf(0)}
+    var round by remember { mutableStateOf(1) }
+    var score by remember { mutableStateOf(0) }
 
     // phase = 0: memorise phase
     // phase = 1: simple addition phase
     // phase = 2: enter words phase
-    var phase by remember{mutableStateOf(0)}
+    var phase by remember { mutableStateOf(0) }
 
     // phase timer
-    var tick by remember{mutableStateOf(10)}
+    var tick by remember { mutableStateOf(10) }
 
     // Snapshot of shuffled words, stable for the duration of each round.
     // Initialized once on first composition, then re-shuffled only when `round` changes.
@@ -58,44 +59,54 @@ fun WordRecall(onReturn: () -> Unit){
     }
 
     // addends for the sum
-    var a1 by remember{mutableStateOf(1)}
-    var a2 by remember{mutableStateOf(1)}
+    var a1 by remember { mutableStateOf(1) }
+    var a2 by remember { mutableStateOf(1) }
 
     // user output for the sum
-    var r1 by remember{mutableStateOf("")}
+    var r1 by remember { mutableStateOf("") }
 
     // user output for the words
-    var w1 by remember{mutableStateOf("")}
-    var w2 by remember{mutableStateOf("")}
-    var w3 by remember{mutableStateOf("")}
-    var w4 by remember{mutableStateOf("")}
-    var w5 by remember{mutableStateOf("")}
-    var w6 by remember{mutableStateOf("")}
+    var w1 by remember { mutableStateOf("") }
+    var w2 by remember { mutableStateOf("") }
+    var w3 by remember { mutableStateOf("") }
+    var w4 by remember { mutableStateOf("") }
+    var w5 by remember { mutableStateOf("") }
+    var w6 by remember { mutableStateOf("") }
 
-    var showbox by remember{mutableStateOf(false)}
+    var showbox by remember { mutableStateOf(false) }
     val authService = remember { AuthService() }
 
+    // FIX: submitted flag prevents submit() firing twice.
+    // AlertDialog's onDismissRequest fires even when the confirm button is pressed,
+    // which previously caused duplicate database entries.
+    var submitted by remember { mutableStateOf(false) }
 
-    // Timer
-    LaunchedEffect(tick) {
-        for (i in tick downTo 0) {
+    // Timer — FIX: LaunchedEffect(Unit) so the countdown runs once and is not
+    // restarted every second by a tick state change (same bug as FocusFlick/TaskSwitch).
+    LaunchedEffect(Unit) {
+        for (i in 10 downTo 0) {
             tick = i
             delay(1000)
         }
     }
 
     // Submit score
-    fun submit(){
+    fun submit() {
         val s = MiniGameScoresService()
         val userId = authService.getCurrentUserId()
-        (userId?.let{s.addUserGameAttempt(it, GameType.LEARNING_AND_MEMORY, score, {})})
+        userId?.let { s.addUserGameAttempt(it, GameType.LEARNING_AND_MEMORY, score, {}) }
     }
 
+    fun submitOnce() {
+        if (!submitted) {
+            submitted = true
+            submit()
+        }
+    }
 
     // Phase manager for phase 0 and 1
-    LaunchedEffect(tick){
-        // changing phase
-        if(phase == 0 && tick == 0){
+    LaunchedEffect(tick) {
+        if (phase == 0 && tick == 0) {
             a1 = arrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9).random()
             a2 = arrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9).random()
             phase = 1
@@ -103,7 +114,7 @@ fun WordRecall(onReturn: () -> Unit){
     }
 
     // Phase manager for phase 2
-    fun newRound(){
+    fun newRound() {
         val wordInputs = listOf(w1, w2, w3, w4, w5, w6)
         val wordsShown = round + 3 // Round 1 = 4 words, Round 2 = 5 words, Round 3 = 6 words
         for (i in 0 until wordsShown) {
@@ -116,29 +127,28 @@ fun WordRecall(onReturn: () -> Unit){
         w4 = ""
         w5 = ""
         w6 = ""
-        if(round < 3){
+        if (round < 3) {
             round += 1
             phase = 0
             tick = 10
-        }else{
+        } else {
             showbox = true
         }
     }
 
-    if(showbox){
+    if (showbox) {
         AlertDialog(
             onDismissRequest = {
-                submit()
+                submitOnce()
                 onReturn()
             },
             title = { Text("Submit your score") },
             text = { Text("Your score is $score. Submit score?") },
             confirmButton = {
                 TextButton(onClick = {
-                    submit()
+                    submitOnce()
                     onReturn()
-                }
-                ){
+                }) {
                     Text("OK")
                 }
             }
@@ -149,8 +159,8 @@ fun WordRecall(onReturn: () -> Unit){
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-    ){
-        Row(){
+    ) {
+        Row() {
             // Round display
             Text(
                 text = "Round: ",
@@ -159,7 +169,7 @@ fun WordRecall(onReturn: () -> Unit){
             )
             Text(
                 text = "$round",
-                fontWeight= FontWeight.Bold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 32.sp,
                 textAlign = TextAlign.Center,
             )
@@ -171,9 +181,9 @@ fun WordRecall(onReturn: () -> Unit){
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Red
                 )
-            ){Text("Quit")}
+            ) { Text("Quit") }
         }
-        Row(){
+        Row() {
             // Score display
             Text(
                 text = "Score: ",
@@ -182,15 +192,15 @@ fun WordRecall(onReturn: () -> Unit){
             )
             Text(
                 text = "$score",
-                fontWeight= FontWeight.Bold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 32.sp,
                 textAlign = TextAlign.Center,
             )
         }
         // Game
-        if(phase == 0){
+        if (phase == 0) {
             // Instructions
-            Row(){
+            Row() {
                 Text(
                     text = "Memorise the words. ($tick seconds left)",
                     fontSize = 19.sp,
@@ -199,19 +209,19 @@ fun WordRecall(onReturn: () -> Unit){
                 )
             }
             // Display words to memorise
-            for(i in 1..round+3){
-                Row(modifier=Modifier.padding(5.dp).background(Color.LightGray).fillMaxWidth().padding(5.dp)){
-                    val word = currentWords[i-1]
+            for (i in 1..round + 3) {
+                Row(modifier = Modifier.padding(5.dp).background(Color.LightGray).fillMaxWidth().padding(5.dp)) {
+                    val word = currentWords[i - 1]
                     Text(
-                        text = "$i"+". $word",
+                        text = "$i" + ". $word",
                         fontSize = 26.sp
                     )
                 }
             }
         }
-        if(phase == 1){
+        if (phase == 1) {
             // Instructions
-            Row(){
+            Row() {
                 Text(
                     text = "Solve: $a1 + $a2",
                     fontSize = 19.sp,
@@ -220,41 +230,46 @@ fun WordRecall(onReturn: () -> Unit){
                 )
             }
             // Text field for user input
-            Row(){
+            Row() {
                 TextField(
                     value = r1,
-                    onValueChange = {
-                        if((it+"1").toIntOrNull() != null){
-                            if(it.length < 3){
-                                r1 = it
-                            }
+                    onValueChange = { input ->
+                        // FIX: replaced `(it+"1").toIntOrNull() != null` with an explicit
+                        // digits-only regex. The old trick appended "1" to the input and
+                        // checked if the result parsed as an Int, which could silently
+                        // misbehave on strings that parse due to the appended digit alone,
+                        // or overflow on very long digit strings.
+                        // The regex `^\d*$` accepts only an empty string or pure digit
+                        // characters, and the length cap prevents any overflow risk.
+                        if (input.matches(Regex("^\\d*$")) && input.length < 3) {
+                            r1 = input
                         }
                     },
-                    label = { Text("Answer")},
-                    modifier = Modifier.fillMaxWidth().padding(top=10.dp),
+                    label = { Text("Answer") },
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Number
                     )
                 )
             }
             // Submit button
-            Row(modifier=Modifier.padding(top=10.dp)){
-                if(r1.toIntOrNull() == a1+a2){
+            Row(modifier = Modifier.padding(top = 10.dp)) {
+                if (r1.toIntOrNull() == a1 + a2) {
                     Button(
                         onClick = { phase = 2 },
                         modifier = Modifier.size(110.dp, 35.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Green,
                         )
-                    ){Text("Submit", color=Color.Black)}
-                }else{
-                    Text("Get the correct answer to submit.", color=Color.Red, fontStyle=FontStyle.Italic)
+                    ) { Text("Submit", color = Color.Black) }
+                } else {
+                    Text("Get the correct answer to submit.", color = Color.Red, fontStyle = FontStyle.Italic)
                 }
             }
         }
-        if(phase == 2){
+        if (phase == 2) {
             // Instructions
-            Row(){
+            Row() {
                 Text(
                     text = "Recall the words.",
                     fontSize = 19.sp,
@@ -263,90 +278,67 @@ fun WordRecall(onReturn: () -> Unit){
                 )
             }
             // Text fields for user input
-            Row(){
+            Row() {
                 TextField(
                     value = w1,
-                    onValueChange = {
-                        if(it.length < 20){
-                            w1 = it
-                        }
-                    },
-                    label = { Text("Word 1")},
-                    modifier = Modifier.fillMaxWidth().padding(top=10.dp),
+                    onValueChange = { if (it.length < 20) w1 = it },
+                    label = { Text("Word 1") },
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 )
             }
-            Row(){
+            Row() {
                 TextField(
                     value = w2,
-                    onValueChange = {
-                        if(it.length < 20){
-                            w2 = it
-                        }
-                    },
-                    label = { Text("Word 2")},
-                    modifier = Modifier.fillMaxWidth().padding(top=10.dp),
+                    onValueChange = { if (it.length < 20) w2 = it },
+                    label = { Text("Word 2") },
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 )
             }
-            Row(){
+            Row() {
                 TextField(
                     value = w3,
-                    onValueChange = {
-                        if(it.length < 20){
-                            w3 = it
-                        }
-                    },
-                    label = { Text("Word 3")},
-                    modifier = Modifier.fillMaxWidth().padding(top=10.dp),
+                    onValueChange = { if (it.length < 20) w3 = it },
+                    label = { Text("Word 3") },
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 )
             }
-            Row(){
+            Row() {
                 TextField(
                     value = w4,
-                    onValueChange = {
-                        if(it.length < 20){
-                            w4 = it
-                        }
-                    },
-                    label = { Text("Word 4")},
-                    modifier = Modifier.fillMaxWidth().padding(top=10.dp),
+                    onValueChange = { if (it.length < 20) w4 = it },
+                    label = { Text("Word 4") },
+                    modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                 )
             }
-            if(round >= 2){
-                Row(){
+            if (round >= 2) {
+                Row() {
                     TextField(
                         value = w5,
-                        onValueChange = {
-                            if(it.length < 20){
-                                w5 = it
-                            }
-                        },
-                        label = { Text("Word 5")},
-                        modifier = Modifier.fillMaxWidth().padding(top=10.dp),
+                        onValueChange = { if (it.length < 20) w5 = it },
+                        label = { Text("Word 5") },
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                     )
                 }
             }
-            if(round == 3){
-                Row(){
+            if (round == 3) {
+                Row() {
                     TextField(
                         value = w6,
-                        onValueChange = {
-                            if(it.length < 20){
-                                w6 = it
-                            }
-                        },
-                        label = { Text("Word 6")},
-                        modifier = Modifier.fillMaxWidth().padding(top=10.dp),
+                        onValueChange = { if (it.length < 20) w6 = it },
+                        label = { Text("Word 6") },
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                     )
                 }
             }
             // Submit button
-            Row(modifier=Modifier.padding(top=10.dp)){
+            Row(modifier = Modifier.padding(top = 10.dp)) {
                 Button(
-                    onClick = {newRound()},
+                    onClick = { newRound() },
                     modifier = Modifier.size(110.dp, 35.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Green)
-                ){Text("Submit", color=Color.Black)}
+                        containerColor = Color.Green
+                    )
+                ) { Text("Submit", color = Color.Black) }
             }
         }
     }
