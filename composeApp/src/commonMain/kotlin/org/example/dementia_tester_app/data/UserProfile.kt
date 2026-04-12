@@ -5,8 +5,7 @@ package org.example.dementia_tester_app.data
  */
 enum class UserType(val value: String) {
     USER("user"),
-    DOCTOR("doctor"),
-    ADMIN("admin");
+    DOCTOR("doctor");
     
     companion object {
         /**

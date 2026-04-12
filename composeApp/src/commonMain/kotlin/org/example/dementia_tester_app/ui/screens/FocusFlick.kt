@@ -30,49 +30,65 @@ import kotlin.random.Random
 
 
 @Composable
-fun FocusFlick(onReturn: () -> Unit){
-    var showbox by remember{mutableStateOf(false)}
-    var timeleft by remember{mutableStateOf(30)}
-    var score by remember{mutableStateOf(0)}
-    var x by remember{mutableStateOf(0.5)}
-    var y by remember{mutableStateOf(0.5)}
+fun FocusFlick(onReturn: () -> Unit) {
+    var showbox by remember { mutableStateOf(false) }
+    var timeleft by remember { mutableStateOf(30) }
+    var score by remember { mutableStateOf(0) }
+    var x by remember { mutableStateOf(0.5) }
+    var y by remember { mutableStateOf(0.5) }
     val authService = remember { AuthService() }
 
-    fun submit(){
+    // FIX 1: submitted flag prevents submit() firing twice.
+    // AlertDialog's onDismissRequest fires even when the confirm button is pressed,
+    // which previously caused duplicate database entries.
+    var submitted by remember { mutableStateOf(false) }
+
+    fun submit() {
         val s = MiniGameScoresService()
         val userId = authService.getCurrentUserId()
-        (userId?.let{s.addUserGameAttempt(it, GameType.COMPLEX_ATTENTION, score, {})})
+        userId?.let { s.addUserGameAttempt(it, GameType.COMPLEX_ATTENTION, score, {}) }
     }
-    // Timer
-    LaunchedEffect(timeleft) {
-        for (i in timeleft downTo 0) {
+
+    fun submitOnce() {
+        if (!submitted) {
+            submitted = true
+            submit()
+        }
+    }
+
+    // FIX 2: Use LaunchedEffect(Unit) instead of LaunchedEffect(timeleft).
+    // Previously, using timeleft as the key caused the effect to cancel and restart
+    // every second (whenever timeleft changed), resetting the loop each time.
+    // LaunchedEffect(Unit) launches once and owns the full countdown.
+    LaunchedEffect(Unit) {
+        for (i in 30 downTo 0) {
             timeleft = i
             delay(1000)
         }
         showbox = true
     }
-    if(showbox){
+
+    if (showbox) {
         AlertDialog(
             onDismissRequest = {
-                submit()
+                submitOnce()
                 onReturn()
             },
             title = { Text("Submit your score") },
             text = { Text("Your score is $score. Submit score?") },
             confirmButton = {
                 TextButton(onClick = {
-                    submit()
+                    submitOnce()
                     onReturn()
-                    }
-                ){
+                }) {
                     Text("OK")
                 }
             }
         )
     }
 
-
-// When a circle is clicked, the score increases. This function detects the increase in score and then finds a new random location for the circle
+    // When a circle is clicked, the score increases. This function detects the increase
+    // in score and then finds a new random location for the circle.
     LaunchedEffect(score) {
         x = Random.nextDouble()
         y = Random.nextDouble()
@@ -82,8 +98,8 @@ fun FocusFlick(onReturn: () -> Unit){
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-    ){
-        Row(){
+    ) {
+        Row {
             // Time display
             Text(
                 text = "Time: ",
@@ -92,7 +108,7 @@ fun FocusFlick(onReturn: () -> Unit){
             )
             Text(
                 text = "$timeleft",
-                fontWeight= FontWeight.Bold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 32.sp,
                 textAlign = TextAlign.Center,
             )
@@ -104,9 +120,9 @@ fun FocusFlick(onReturn: () -> Unit){
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Red
                 )
-            ){Text("Quit")}
+            ) { Text("Quit") }
         }
-        Row(){
+        Row {
             // Score display
             Text(
                 text = "Score: ",
@@ -115,25 +131,34 @@ fun FocusFlick(onReturn: () -> Unit){
             )
             Text(
                 text = "$score",
-                fontWeight= FontWeight.Bold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 32.sp,
                 textAlign = TextAlign.Center,
             )
         }
         // Code for getting the size of this row adapted from the solution by Gabriele Mariotti on StackOverflow
         // https://stackoverflow.com/questions/67138343/jetpack-compose-find-parents-width-length
-        var size by remember { mutableStateOf(Size.Zero)}
-        Row(modifier = Modifier
-            .padding(6.dp, 16.dp)
-            .fillMaxSize()
-            .background(Color.LightGray)
-            .onGloballyPositioned { coordinates ->
-                size = coordinates.size.toSize()
-            }){
+        var size by remember { mutableStateOf(Size.Zero) }
+        Row(
+            modifier = Modifier
+                .padding(6.dp, 16.dp)
+                .fillMaxSize()
+                .background(Color.LightGray)
+                .onGloballyPositioned { coordinates ->
+                    size = coordinates.size.toSize()
+                }
+        ) {
             val density = LocalDensity.current.density
             // Use padding to move the column with the button to the correct spot
             // using the random numbers to calculate how much padding to use
-            Column(Modifier.padding(max(0.0,(size.width/density*x-64)).dp, max(0.0,(size.height/density*y-64)).dp, 0.dp, 0.dp)){
+            Column(
+                Modifier.padding(
+                    max(0.0, (size.width / density * x - 64)).dp,
+                    max(0.0, (size.height / density * y - 64)).dp,
+                    0.dp,
+                    0.dp
+                )
+            ) {
                 Button(
                     onClick = {
                         if (timeleft > 0) {

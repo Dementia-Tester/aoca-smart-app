@@ -30,7 +30,6 @@ import org.example.dementia_tester_app.notifications.ReminderHelper
 import org.example.dementia_tester_app.notifications.ReminderIds
 import org.example.dementia_tester_app.notifications.ReminderPolicy
 import org.example.dementia_tester_app.notifications.ReminderChannels
-import org.example.dementia_tester_app.ui.screens.admin.AdminDashboard
 import org.example.dementia_tester_app.auth.AuthService
 import org.example.dementia_tester_app.auth.AuthResult
 import org.example.dementia_tester_app.data.DatabaseResult
@@ -52,40 +51,6 @@ fun App() {
         val scope = rememberCoroutineScope()
         val authService = remember { AuthService() }
         val userProfileService = remember { UserProfileService() }
-
-        // Seed Admin User (One-time check)
-        LaunchedEffect(Unit) {
-            val adminEmail = "admin@test.com"
-            val adminPass = "Password123"
-            
-            // 1. Try to sign up first. If it fails (already exists), try to sign in.
-            authService.signUp(adminEmail, adminPass) { signUpResult ->
-                if (signUpResult is AuthResult.Success) {
-                    val uid = authService.getCurrentUserId() ?: return@signUp
-                    val adminProfile = UserProfile(
-                        userId = uid,
-                        name = "System Administrator",
-                        email = adminEmail,
-                        userType = UserType.ADMIN
-                    )
-                    userProfileService.updateUserProfile(adminProfile) { }
-                } else {
-                    // 2. If sign up fails, try to sign in with the same credentials
-                    authService.signIn(adminEmail, adminPass) { signInResult ->
-                        if (signInResult is AuthResult.Success) {
-                            val uid = authService.getCurrentUserId() ?: return@signIn
-                            val adminProfile = UserProfile(
-                                userId = uid,
-                                name = "System Administrator",
-                                email = adminEmail,
-                                userType = UserType.ADMIN
-                            )
-                            userProfileService.updateUserProfile(adminProfile) { }
-                        }
-                    }
-                }
-            }
-        }
         
         // State to track the user type
         var userType by remember { mutableStateOf(UserType.USER) }
@@ -93,7 +58,6 @@ fun App() {
         val getDashboardType = { 
             when(userType) {
                 UserType.DOCTOR -> "DoctorDashboard"
-                UserType.ADMIN -> "AdminDashboard"
                 else -> "Dashboard"
             }
         }
@@ -167,11 +131,10 @@ fun App() {
                     when (result) {
                         is DatabaseResult.Success -> {
                             userEmail = result.data.email
-                            // Force ADMIN type if email is the admin email, otherwise use database value
-                            userType = if (userEmail == "admin@test.com") UserType.ADMIN else result.data.userType
+                            userType = result.data.userType
                             
-                            // Bypass email verification for ADMIN or if already verified
-                            if (userType == UserType.ADMIN || authService.isEmailVerified()) {
+                            // Bypass email verification if already verified
+                            if (authService.isEmailVerified()) {
                                 currentScreen = getDashboardType()
                             } else {
                                 currentScreen = "EmailVerification"
@@ -194,11 +157,7 @@ fun App() {
                     Login(
                         onLogin = { email ->
                             userEmail = email
-                            // Check if it's the admin account to bypass verification immediately
-                            if (email == "admin@test.com") {
-                                isLoadingProfile = true
-                                currentScreen = "Loading"
-                            } else if (!authService.isEmailVerified()) {
+                            if (!authService.isEmailVerified()) {
                                 authService.reloadUser { result ->
                                     when (result) {
                                         is AuthResult.Success -> {
@@ -276,7 +235,6 @@ fun App() {
                     AppMenuContent(onMenuItemClick = { menuItem ->
                         currentScreen = when {
                             menuItem == "Dashboard" && userType == UserType.DOCTOR -> "DoctorDashboard"
-                            menuItem == "Dashboard" && userType == UserType.ADMIN -> "AdminDashboard"
                             else -> menuItem
                         }
 
@@ -291,7 +249,6 @@ fun App() {
                     drawerState = drawerState,
                     title = when(currentScreen) {
                         "DoctorDashboard" -> "Dashboard"
-                        "AdminDashboard" -> "Admin Panel"
                         else -> currentScreen
                     }
                 ) {
@@ -299,7 +256,6 @@ fun App() {
                     when (currentScreen) {
                         "Dashboard" -> Dashboard()
                         "DoctorDashboard" -> DoctorDashboard()
-                        "AdminDashboard" -> AdminDashboard()
                         "Health Survey" -> HealthSurvey(
                             onBackToDashboard = {
                                 currentScreen = getDashboardType()
