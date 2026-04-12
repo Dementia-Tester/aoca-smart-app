@@ -72,7 +72,7 @@ private object TextSizes {
 
 /**
  * Calculates pixel positions for each score to be plotted on a chart.
- * 
+ *
  * @param scores List of score values to be plotted
  * @param width Width of the canvas in pixels
  * @param height Height of the canvas in pixels
@@ -90,13 +90,23 @@ private fun calcPoints(
     maxPoints: Int = scores.size
 ): List<Offset> = scores.mapIndexed { i, s ->
     val x = width * i / max(1, maxPoints - 1)
-    val y = height - height * (s - minScore) / max(1, maxScore - minScore)
+    // FIX: When all scores are equal (minScore == maxScore), the original formula
+    // produced y = height (bottom of chart) for every point, because:
+    //   y = height - height * (s - minScore) / max(1, 0) = height - 0 = height
+    // This made a perfect score like 100/100 appear at the very bottom.
+    // Fix: detect the flat-line case and pin all points to the vertical midpoint
+    // instead, which is visually unambiguous and clearly not a zero score.
+    val y = if (maxScore == minScore) {
+        height / 2f
+    } else {
+        height - height * (s - minScore) / (maxScore - minScore).toFloat()
+    }
     Offset(x, y)
 }
 
 /**
  * Creates a path for the shaded area beneath a line on a chart.
- * 
+ *
  * @param points List of points that form the line
  * @param height Height of the canvas in pixels
  * @return Path object representing the shaded area beneath the line
@@ -114,7 +124,7 @@ private fun shadedPath(points: List<Offset>, height: Float): Path =
 
 /**
  * Draws X-axis labels at regular intervals below a chart.
- * 
+ *
  * @param count Total number of labels to display
  * @param startIndex Starting index for label numbering (default: 0)
  * @param labelStep Interval between displayed labels (default: 1)
@@ -140,7 +150,7 @@ private fun XAxisLabels(count: Int, startIndex: Int = 0, labelStep: Int = 1) {
 
 /**
  * Filters user attempts based on the selected filter option.
- * 
+ *
  * @param attempts List of user attempts to filter
  * @param filterOption String indicating which filter to apply ("Last 5 attempts", "Last 10 attempts", or "All attempts")
  * @return Pair containing the filtered list of attempts and the starting index
@@ -166,7 +176,7 @@ private fun filterAttempts(
 
 /**
  * Displays a card with an overview of test results for a specific attempt.
- * 
+ *
  * @param attempt The UserAttempts object containing the test results
  * @param attemptNumber The number of the attempt (1-based)
  * @param userName Optional name of the user (for comparison view)
@@ -197,7 +207,7 @@ private fun ResultsOverviewCard(
 
 /**
  * Displays a card with cognitive situation scores for a specific attempt.
- * 
+ *
  * @param attempt The UserAttempts object containing the cognitive scores
  * @param userName Optional name of the user (for comparison view)
  */
@@ -231,7 +241,7 @@ private fun CognitiveDetailsCard(
 
 /**
  * Displays a card with domain scores for a specific attempt.
- * 
+ *
  * @param attempt The UserAttempts object containing the domain scores
  * @param userName Optional name of the user (for comparison view)
  */
@@ -263,7 +273,7 @@ private fun DomainDetailsCard(
 
 /**
  * Displays a card with machine learning predictions based on historical test scores.
- * 
+ *
  * @param allAttempts The complete list of user attempts used for prediction
  * @param userName Optional name of the user (for comparison view)
  */
@@ -302,7 +312,7 @@ private fun MLPredictionCard(
 
 /**
  * Reusable card component with a green header for displaying result sections.
- * 
+ *
  * @param title The title to display in the card header
  * @param content The composable content to display in the card body
  */
@@ -329,7 +339,7 @@ private fun ResultCard(title: String, content: @Composable () -> Unit) {
 /**
  * Displays detailed information for a selected attempt, including overview, cognitive details,
  * domain details, and ML prediction.
- * 
+ *
  * @param attempt The UserAttempts object containing the test results
  * @param attemptNumber The number of the attempt (1-based)
  * @param allAttempts The complete list of user attempts used for ML prediction
@@ -350,7 +360,7 @@ private fun AttemptDetails(attempt: UserAttempts, attemptNumber: Int, allAttempt
 /**
  * Displays detailed information for a selected attempt in comparison mode,
  * including overview, cognitive details, domain details, and ML prediction with user name.
- * 
+ *
  * @param attempt The UserAttempts object containing the test results
  * @param attemptNumber The number of the attempt (1-based)
  * @param allAttempts The complete list of user attempts used for ML prediction
@@ -389,7 +399,7 @@ private fun HealthSurveyDetails(attempt: UserAttempts, attemptNumber: Int) {
 }
 
 /**
- * Displays  information for a selected minigame attempt along with some overall statistics for
+ * Displays information for a selected minigame attempt along with some overall statistics for
  * that particular minigame.
  *
  * @param attempt The GameAttempt object containing the game results
@@ -401,11 +411,8 @@ private fun MiniGameAttemptDetails(
     attempt: GameAttempt,
     attemptNumber: Int,
     gameResult: GameResult?,
-){
-
-
+) {
     Column(Modifier.fillMaxWidth()) {
-        // Results overview card
         ResultCard(title = "Results Overview") {
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                 Column(Modifier.weight(1f)) {
@@ -415,8 +422,7 @@ private fun MiniGameAttemptDetails(
             }
         }
         Spacer(Modifier.height(16.dp))
-        // display overall statistics for the game type
-        if(gameResult !=null) {
+        if (gameResult != null) {
             ResultCard(title = "Overall Results for ${gameResult.gameName}") {
                 Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                     Column(Modifier.weight(1f)) {
@@ -430,22 +436,6 @@ private fun MiniGameAttemptDetails(
             }
         }
         Spacer(Modifier.height(16.dp))
-
-        /* These lines display what was in the previous app
-
-        // Cognitive details card. Not implemented in original app.
-        ResultCard(title = "Cognitive Details"){}
-        Spacer(Modifier.height(16.dp))
-        // Domain Details card. Not implemented in original app.
-        ResultCard(title = "Domain Details") {}
-        Spacer(Modifier.height(16.dp))
-        // ML prediction card
-        ResultCard(title = "ML Prediction") {
-            Column(Modifier.fillMaxWidth()) {
-                Text("ML Prediction only available on Questionnaire")
-            }
-        }
-        */
     }
 }
 
@@ -454,7 +444,7 @@ private fun MiniGameAttemptDetails(
 /**
  * Displays a line graph showing total scores for a single user's test or game attempts.
  * Each point on the graph is clickable to view detailed information.
- * 
+ *
  * @param attempts List of integers representing scores to display in the graph
  * @param selectedIndex Index of the currently selected attempt (or null if none selected)
  * @param onPointSelected Callback function when a point is clicked, receives the index of the selected point
@@ -506,7 +496,6 @@ private fun ScoreLineGraph(
                 minS, maxS
             )
 
-            // draw chart
             Canvas(Modifier.fillMaxSize()) {
                 drawPath(shadedPath(pts, size.height), ChartColors.USER_1_SHADE)
                 drawLine(ChartColors.AXIS, Offset(0f, size.height), Offset(size.width, size.height), ChartDims.AXIS_STROKE)
@@ -529,12 +518,10 @@ private fun ScoreLineGraph(
                 }
             }
 
-            // clickable hitboxes & labels
             pts.forEachIndexed { i, p ->
                 val xDp = with(density) { p.x.toDp() }
                 val yDp = with(density) { p.y.toDp() }
 
-                // center an 8 dp box on each point
                 Box(
                     Modifier
                         .align(Alignment.TopStart)
@@ -543,8 +530,6 @@ private fun ScoreLineGraph(
                         .clickable { onPointSelected(i) }
                 )
 
-                // point label at top‑right
-                // For the last point, position the label to the left if it's near the edge
                 val xOffset = if (i == scores.lastIndex && p.x / constraints.maxWidth.toFloat() > 0.8f) (-20).dp else 6.dp
                 Text(
                     text = scores[i].toString(),
@@ -565,7 +550,7 @@ private fun ScoreLineGraph(
 /**
  * Displays a comparative line graph showing total scores for two users' test attempts.
  * Each point on the graph is clickable to view detailed information.
- * 
+ *
  * @param attempts1 List of UserAttempts objects for the first user
  * @param attempts2 List of UserAttempts objects for the second user
  * @param selectedUser Which user's point is selected (1 for user1, 2 for user2, null for none)
@@ -657,7 +642,6 @@ private fun ComparativeScoreLineGraph(
                 }
             }
 
-            // user1 hitboxes + labels
             pts1.forEachIndexed { i, p ->
                 val xDp = with(density) { p.x.toDp() }
                 val yDp = with(density) { p.y.toDp() }
@@ -669,7 +653,6 @@ private fun ComparativeScoreLineGraph(
                         .size(ChartDims.POINT_BOX)
                         .clickable { onPointSelected(1, i) }
                 )
-                // For the last point, position the label to the left if it's near the edge
                 val xOffset = if (i == s1.lastIndex && p.x / constraints.maxWidth.toFloat() > 0.8f) (-20).dp else 6.dp
                 Text(
                     text = s1[i].toString(),
@@ -682,7 +665,6 @@ private fun ComparativeScoreLineGraph(
                 )
             }
 
-            // user2 hitboxes + labels
             pts2.forEachIndexed { i, p ->
                 val xDp = with(density) { p.x.toDp() }
                 val yDp = with(density) { p.y.toDp() }
@@ -694,7 +676,6 @@ private fun ComparativeScoreLineGraph(
                         .size(ChartDims.POINT_BOX)
                         .clickable { onPointSelected(2, i) }
                 )
-                // For the last point, position the label to the left if it's near the edge
                 val xOffset = if (i == s2.lastIndex && p.x / constraints.maxWidth.toFloat() > 0.8f) (-20).dp else 6.dp
                 Text(
                     text = s2[i].toString(),
@@ -717,7 +698,7 @@ private fun ComparativeScoreLineGraph(
 /**
  * Main component for displaying user test results with interactive charts and detailed information.
  * Can display results for a single user or compare results between two users.
- * 
+ *
  * @param results List of GraphableAttempts objects containing results for the first user
  * @param results2 Optional list of UserResults objects for the second user (for comparison mode)
  * @param user1Name Optional name of the first user (required for comparison mode)
@@ -736,23 +717,21 @@ fun UserTestResults(
     val all2 = if (isComparison) results2.flatMap { it.attempts } else emptyList()
     if (all1.isEmpty() && (!isComparison || all2.isEmpty())) return
 
-
     var selUser by remember { mutableStateOf<Int?>(null) }
     var selIdx  by remember { mutableStateOf<Int?>(null) }
     var crossVis by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     var filterOpt by remember { mutableStateOf("All attempts") }
 
-    val options = listOf("Last 5 attempts","Last 10 attempts","All attempts")
-    val info1 = remember(filterOpt, all1){ filterAttempts(all1, filterOpt) }
-    val info2 = remember(filterOpt, all2){ filterAttempts(all2, filterOpt) }
+    val options = listOf("Last 5 attempts", "Last 10 attempts", "All attempts")
+    val info1 = remember(filterOpt, all1) { filterAttempts(all1, filterOpt) }
+    val info2 = remember(filterOpt, all2) { filterAttempts(all2, filterOpt) }
 
     val f1 = info1.first
     val s1 = info1.second
     val f2 = info2.first
     val s2 = info2.second
 
-    // reset selection
     if (isComparison) {
         selIdx?.takeIf { idx ->
             val rel = if (selUser == 1) f1 else f2
@@ -762,126 +741,130 @@ fun UserTestResults(
         selIdx?.takeIf { it >= f1.size }?.let { selIdx = null }
         selUser = if (selIdx != null) 1 else null
     }
-        Column (Modifier.fillMaxWidth()) {
-            // filter dropdown
-            Row(Modifier.fillMaxWidth(), Arrangement.End) {
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it },
-                    modifier = Modifier.width(200.dp).padding(bottom=8.dp)
-                ) {
-                    OutlinedTextField(
-                        value = filterOpt,
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                        },
-                        modifier = Modifier
-                            .menuAnchor(type=MenuAnchorType.PrimaryNotEditable)
-                            .fillMaxWidth()
-                            .height(50.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White)
-                            .border(
-                                BorderStroke(2.dp, Color.Gray),
-                                shape = RoundedCornerShape(8.dp)
-                            ),
-                        textStyle = LocalTextStyle.current.copy(
-                            textAlign = TextAlign.Center,
-                            color = Color.Black
+
+    Column(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth(), Arrangement.End) {
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+                modifier = Modifier.width(200.dp).padding(bottom = 8.dp)
+            ) {
+                OutlinedTextField(
+                    value = filterOpt,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable)
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White)
+                        .border(
+                            BorderStroke(2.dp, Color.Gray),
+                            shape = RoundedCornerShape(8.dp)
                         ),
-                    )
-                    ExposedDropdownMenu(
-                        expanded=expanded,
-                        onDismissRequest={expanded=false},
-                        modifier=Modifier
-                            .background(Color.White)
-                    ){
-                        options.forEach{opt->
-                            DropdownMenuItem(
-                                text={Text(
-                                    text=opt,
-                                    textAlign=TextAlign.Center,
-                                    modifier=Modifier.fillMaxWidth()
-                                )},
-                                onClick={filterOpt=opt;expanded=false},
-                                modifier=Modifier.background(Color.White)
-                            )
-                        }
+                    textStyle = LocalTextStyle.current.copy(
+                        textAlign = TextAlign.Center,
+                        color = Color.Black
+                    ),
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.background(Color.White)
+                ) {
+                    options.forEach { opt ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = opt,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            onClick = { filterOpt = opt; expanded = false },
+                            modifier = Modifier.background(Color.White)
+                        )
                     }
-                }
-            }
-
-            OutlinedCard(Modifier.fillMaxWidth(),elevation=CardDefaults.cardElevation(2.dp)){
-                if(isComparison){
-                    ComparativeScoreLineGraph(
-                        attempts1=f1 as List<UserAttempts>,
-                        attempts2=f2 as List<UserAttempts>,
-                        selectedUser=selUser,
-                        selectedIndex=selIdx,
-                        onPointSelected={u,i->
-                            if(selUser==u && selIdx==i){
-                                selUser=null;selIdx=null;crossVis=false
-                            } else {
-                                selUser=u;selIdx=i;crossVis=true
-                            }
-                        },
-                        crosshairVisible=crossVis
-                    )
-                } else {
-                    ScoreLineGraph(
-                        attempts=results.getFilteredScores(f1),
-                        selectedIndex=selIdx,
-                        onPointSelected={i->
-                            if(selIdx==i){
-                                selIdx=null;selUser=null;crossVis=false
-                            } else {
-                                selIdx=i;selUser=1;crossVis=true
-                            }
-                        },
-                        crosshairVisible=crossVis,
-                        startAttemptIndex=s1
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            if(selIdx!=null && selUser!=null){
-                var all = if (selUser == 1) all1 else all2
-                val start = if (selUser == 1) s1 else s2
-                val actual = selIdx!! + start
-                if (actual in all.indices){
-                    if (results.type == AttemptType.COGNITIVE_ASSESSMENT) {
-                        all = all as List<UserAttempts>
-                        if (isComparison){
-                            ComparativeAttemptDetails(all[actual],actual+1,all,
-                                if (selUser == 1) user1Name else user2Name)
-                        } else {
-                            AttemptDetails(attempt = all[actual], attemptNumber = actual + 1, allAttempts = all)
-                        }
-                    }
-                    if (results.type == AttemptType.HEALTH_SURVEY) {
-                        all = all as List<UserAttempts>
-                        HealthSurveyDetails(attempt = all[actual], attemptNumber = actual + 1)
-                    }
-                    if (results.type == AttemptType.MINIGAME) {
-                        all = all as List<GameAttempt>
-                        MiniGameAttemptDetails(attempt = all[actual], attemptNumber = actual + 1, results.gameResult)
-                    }
-                }
-            } else {
-                OutlinedCard(Modifier.fillMaxWidth(),elevation=CardDefaults.cardElevation(2.dp)){
-                    Text(
-                        "Click on a point in the graph to view details",
-                        fontSize=TextSizes.DETAIL,
-                        color=Color.Gray,
-                        textAlign=TextAlign.Center,
-                        modifier=Modifier.fillMaxWidth()
-                            .padding(vertical=16.dp,horizontal=16.dp)
-                    )
                 }
             }
         }
+
+        OutlinedCard(Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(2.dp)) {
+            if (isComparison) {
+                ComparativeScoreLineGraph(
+                    attempts1 = f1 as List<UserAttempts>,
+                    attempts2 = f2 as List<UserAttempts>,
+                    selectedUser = selUser,
+                    selectedIndex = selIdx,
+                    onPointSelected = { u, i ->
+                        if (selUser == u && selIdx == i) {
+                            selUser = null; selIdx = null; crossVis = false
+                        } else {
+                            selUser = u; selIdx = i; crossVis = true
+                        }
+                    },
+                    crosshairVisible = crossVis
+                )
+            } else {
+                ScoreLineGraph(
+                    attempts = results.getFilteredScores(f1),
+                    selectedIndex = selIdx,
+                    onPointSelected = { i ->
+                        if (selIdx == i) {
+                            selIdx = null; selUser = null; crossVis = false
+                        } else {
+                            selIdx = i; selUser = 1; crossVis = true
+                        }
+                    },
+                    crosshairVisible = crossVis,
+                    startAttemptIndex = s1
+                )
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        if (selIdx != null && selUser != null) {
+            var all = if (selUser == 1) all1 else all2
+            val start = if (selUser == 1) s1 else s2
+            val actual = selIdx!! + start
+            if (actual in all.indices) {
+                if (results.type == AttemptType.COGNITIVE_ASSESSMENT) {
+                    all = all as List<UserAttempts>
+                    if (isComparison) {
+                        ComparativeAttemptDetails(
+                            all[actual], actual + 1, all,
+                            if (selUser == 1) user1Name!! else user2Name!!
+                        )
+                    } else {
+                        AttemptDetails(attempt = all[actual], attemptNumber = actual + 1, allAttempts = all)
+                    }
+                }
+                if (results.type == AttemptType.HEALTH_SURVEY) {
+                    all = all as List<UserAttempts>
+                    HealthSurveyDetails(attempt = all[actual], attemptNumber = actual + 1)
+                }
+                if (results.type == AttemptType.MINIGAME) {
+                    all = all as List<GameAttempt>
+                    MiniGameAttemptDetails(attempt = all[actual], attemptNumber = actual + 1, results.gameResult)
+                }
+            }
+        } else {
+            OutlinedCard(Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(2.dp)) {
+                Text(
+                    "Click on a point in the graph to view details",
+                    fontSize = TextSizes.DETAIL,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp, horizontal = 16.dp)
+                )
+            }
+        }
+    }
 }
