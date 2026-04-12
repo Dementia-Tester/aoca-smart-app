@@ -25,7 +25,7 @@ import kotlin.random.Random
 @Composable
 fun Triangle(colour: String){
     Canvas(
-        modifier = Modifier.size(100.dp) // adjust size
+        modifier = Modifier.size(100.dp)
     ) {
         val path = Path().apply {
             moveTo(size.width / 2, 0f)
@@ -35,30 +35,19 @@ fun Triangle(colour: String){
         }
 
         var c = Color.Red
-        if(colour=="Red"){
-            c = Color.Red
-        }
-        if(colour=="Blue"){
-            c = Color.Blue
-        }
-        if(colour=="Green"){
-            c = Color.Green
-        }
-        if(colour=="Yellow"){
-            c = Color.Yellow
-        }
+        if(colour=="Red"){ c = Color.Red }
+        if(colour=="Blue"){ c = Color.Blue }
+        if(colour=="Green"){ c = Color.Green }
+        if(colour=="Yellow"){ c = Color.Yellow }
 
-        drawPath(
-            path = path,
-            color = c
-        )
+        drawPath(path = path, color = c)
     }
 }
 
 @Composable
 fun Square(colour: String){
     Canvas(
-        modifier = Modifier.size(100.dp) // adjust size
+        modifier = Modifier.size(100.dp)
     ) {
         val path = Path().apply {
             moveTo(0f, 0f)
@@ -70,44 +59,25 @@ fun Square(colour: String){
         }
 
         var c = Color.Red
-        if(colour=="Red"){
-            c = Color.Red
-        }
-        if(colour=="Blue"){
-            c = Color.Blue
-        }
-        if(colour=="Green"){
-            c = Color.Green
-        }
-        if(colour=="Yellow"){
-            c = Color.Yellow
-        }
+        if(colour=="Red"){ c = Color.Red }
+        if(colour=="Blue"){ c = Color.Blue }
+        if(colour=="Green"){ c = Color.Green }
+        if(colour=="Yellow"){ c = Color.Yellow }
 
-        drawPath(
-            path = path,
-            color = c
-        )
+        drawPath(path = path, color = c)
     }
 }
 
 @Composable
 fun Circle(colour: String){
     Canvas(
-        modifier = Modifier.size(100.dp) // adjust size
+        modifier = Modifier.size(100.dp)
     ){
         var c = Color.Red
-        if(colour=="Red"){
-            c = Color.Red
-        }
-        if(colour=="Blue"){
-            c = Color.Blue
-        }
-        if(colour=="Green"){
-            c = Color.Green
-        }
-        if(colour=="Yellow"){
-            c = Color.Yellow
-        }
+        if(colour=="Red"){ c = Color.Red }
+        if(colour=="Blue"){ c = Color.Blue }
+        if(colour=="Green"){ c = Color.Green }
+        if(colour=="Yellow"){ c = Color.Yellow }
 
         drawCircle(c)
     }
@@ -117,55 +87,70 @@ fun Circle(colour: String){
 
 @Composable
 fun TaskSwitch(onReturn: () -> Unit){
-    var showbox by remember{mutableStateOf(false)}
-    var shape by remember{mutableStateOf("square")}
-    var wrongshape by remember{mutableStateOf("triangle")}
-    var colour by remember{mutableStateOf("red")}
-    var wrongcolour by remember{mutableStateOf("blue")}
-    var match by remember{mutableStateOf("colour")}
-    var timeleft by remember{mutableStateOf(30)}
-    var score by remember{mutableStateOf(0)}
-    var shapenumber by remember{mutableStateOf(0)}
-    var correctchoice by remember{mutableStateOf("Correct")}
-    var incorrectchoice by remember{mutableStateOf("Correct")}
-    var order by remember{mutableStateOf(true)}
+    var showbox by remember { mutableStateOf(false) }
+    var shape by remember { mutableStateOf("square") }
+    var wrongshape by remember { mutableStateOf("triangle") }
+    var colour by remember { mutableStateOf("red") }
+    var wrongcolour by remember { mutableStateOf("blue") }
+    var match by remember { mutableStateOf("colour") }
+    var timeleft by remember { mutableStateOf(30) }
+    var score by remember { mutableStateOf(0) }
+    var shapenumber by remember { mutableStateOf(0) }
+    var correctchoice by remember { mutableStateOf("Correct") }
+    var incorrectchoice by remember { mutableStateOf("Correct") }
+    var order by remember { mutableStateOf(true) }
     val authService = remember { AuthService() }
+
+    // FIX 1: submitted flag prevents submit() firing twice.
+    // AlertDialog's onDismissRequest fires even when the confirm button is pressed,
+    // which previously caused duplicate database entries.
+    var submitted by remember { mutableStateOf(false) }
 
     fun submit(){
         val s = MiniGameScoresService()
         val userId = authService.getCurrentUserId()
-        (userId?.let{s.addUserGameAttempt(it, GameType.EXECUTIVE_FUNCTION, score, {})})
+        userId?.let { s.addUserGameAttempt(it, GameType.EXECUTIVE_FUNCTION, score, {}) }
     }
-    // Timer
-    LaunchedEffect(timeleft) {
-        for (i in timeleft downTo 0) {
+
+    fun submitOnce() {
+        if (!submitted) {
+            submitted = true
+            submit()
+        }
+    }
+
+    // FIX 2: Use LaunchedEffect(Unit) instead of LaunchedEffect(timeleft).
+    // Previously, using timeleft as the key caused the effect to cancel and restart
+    // every second (whenever timeleft changed), resetting the loop each time.
+    // LaunchedEffect(Unit) launches once and owns the full countdown.
+    LaunchedEffect(Unit) {
+        for (i in 30 downTo 0) {
             timeleft = i
             delay(1000)
         }
         showbox = true
     }
+
     if(showbox){
         AlertDialog(
             onDismissRequest = {
-                submit()
+                submitOnce()
                 onReturn()
             },
             title = { Text("Submit your score") },
             text = { Text("Your score is $score. Submit score?") },
             confirmButton = {
                 TextButton(onClick = {
-                    submit()
+                    submitOnce()
                     onReturn()
-                    }
-                ){
+                }){
                     Text("OK")
                 }
             }
         )
     }
 
-
-// When a button is pressed, the shapenumber variable increases, and a new shape is created with a new colour.
+    // When a button is pressed, the shapenumber variable increases, and a new shape is created with a new colour.
     LaunchedEffect(shapenumber) {
         val shapes = arrayOf("Square", "Circle", "Triangle")
         shapes.shuffle()
@@ -200,7 +185,7 @@ fun TaskSwitch(onReturn: () -> Unit){
             )
             Text(
                 text = "$timeleft",
-                fontWeight= FontWeight.Bold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 32.sp,
                 textAlign = TextAlign.Center,
             )
@@ -212,7 +197,7 @@ fun TaskSwitch(onReturn: () -> Unit){
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Red
                 )
-            ){Text("Quit")}
+            ){ Text("Quit") }
         }
         Row(){
             // Score display
@@ -223,12 +208,12 @@ fun TaskSwitch(onReturn: () -> Unit){
             )
             Text(
                 text = "$score",
-                fontWeight= FontWeight.Bold,
+                fontWeight = FontWeight.Bold,
                 fontSize = 32.sp,
                 textAlign = TextAlign.Center,
             )
         }
-        Row(modifier=Modifier.padding(16.dp)){
+        Row(modifier = Modifier.padding(16.dp)){
             Text(
                 text = "Match by: $match",
                 textAlign = TextAlign.Center,
@@ -236,60 +221,47 @@ fun TaskSwitch(onReturn: () -> Unit){
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        Row(horizontalArrangement = Arrangement.Center, modifier=Modifier.fillMaxWidth()){
-            if(shape == "Triangle"){
-                Triangle(colour)
-            }
-            if(shape == "Square"){
-                Square(colour)
-            }
-            if(shape=="Circle"){
-                Circle(colour)
-            }
+        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()){
+            if(shape == "Triangle"){ Triangle(colour) }
+            if(shape == "Square"){ Square(colour) }
+            if(shape == "Circle"){ Circle(colour) }
         }
         if(order){
-            Row(horizontalArrangement = Arrangement.Center, modifier=Modifier.fillMaxWidth().padding(10.dp)){
+            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(10.dp)){
                 Button(
-                    onClick = { score += 1
-                              shapenumber += 1},
+                    onClick = {
+                        score += 1
+                        shapenumber += 1
+                    },
                     modifier = Modifier.size(110.dp, 35.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.DarkGray
-                    )
-                ){Text("$correctchoice")}
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                ){ Text("$correctchoice") }
             }
-
-            Row(horizontalArrangement = Arrangement.Center, modifier=Modifier.fillMaxWidth().padding(5.dp)){
+            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(5.dp)){
                 Button(
                     onClick = { shapenumber += 1 },
                     modifier = Modifier.size(110.dp, 35.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.DarkGray
-                    )
-                ){Text("$incorrectchoice")}
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                ){ Text("$incorrectchoice") }
             }
-        }else{
-            Row(horizontalArrangement = Arrangement.Center, modifier=Modifier.fillMaxWidth().padding(10.dp)){
+        } else {
+            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(10.dp)){
                 Button(
                     onClick = { shapenumber += 1 },
                     modifier = Modifier.size(110.dp, 35.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.DarkGray
-                    )
-                ){Text("$incorrectchoice")}
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                ){ Text("$incorrectchoice") }
             }
-
-            Row(horizontalArrangement = Arrangement.Center, modifier=Modifier.fillMaxWidth().padding(5.dp)){
+            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth().padding(5.dp)){
                 Button(
-                    onClick = { score += 1
-                              shapenumber += 1},
+                    onClick = {
+                        score += 1
+                        shapenumber += 1
+                    },
                     modifier = Modifier.size(110.dp, 35.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.DarkGray
-                    )
-                ){Text("$correctchoice")}
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                ){ Text("$correctchoice") }
             }
         }
-
     }
 }
