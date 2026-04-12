@@ -28,25 +28,25 @@ import org.example.dementia_tester_app.ui.components.LoadingSpinner
 fun Profile(onBack: () -> Unit = {}) {
     // Create UserProfileService instance
     val userProfileService = remember { UserProfileService() }
-    
+
     // UI state
     var isEditMode by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showExitConfirmationDialog by remember { mutableStateOf(false) }
-    
+
     // Field error states
     var emailError by remember { mutableStateOf(false) }
     var phoneNumberError by remember { mutableStateOf(false) }
     var emergencyEmailError by remember { mutableStateOf(false) }
     var emergencyPhoneNumberError by remember { mutableStateOf(false) }
-    
+
     // User profile state
     var userProfile by remember { mutableStateOf(UserProfile()) }
     // Original profile state (to detect changes and revert if needed)
     var originalProfile by remember { mutableStateOf(UserProfile()) }
-    
+
     // Derived state variables for easier access
     var name by remember { mutableStateOf("") }
     var dateOfBirth by remember { mutableStateOf("") }
@@ -63,7 +63,7 @@ fun Profile(onBack: () -> Unit = {}) {
     var emergencyEmail by remember { mutableStateOf("") }
     var emergencyRelation by remember { mutableStateOf("") }
     var emergencyPhoneNumber by remember { mutableStateOf("") }
-    
+
     // Update derived state when userProfile changes
     LaunchedEffect(userProfile) {
         name = userProfile.name
@@ -81,24 +81,24 @@ fun Profile(onBack: () -> Unit = {}) {
         emergencyRelation = userProfile.emergencyRelation
         emergencyPhoneNumber = userProfile.emergencyPhoneNumber
     }
-    
+
     val scrollState = rememberScrollState()
 
     val hasProfileChanges by derivedStateOf {
         name != originalProfile.name ||
-        dateOfBirth != originalProfile.dateOfBirth ||
-        email != originalProfile.email ||
-        phoneNumber != originalProfile.phoneNumber ||
-        address != originalProfile.address ||
-        suburb != originalProfile.suburb ||
-        state != originalProfile.state ||
-        postcode != originalProfile.postcode ||
-        country != originalProfile.country ||
-        gender != originalProfile.gender ||
-        emergencyName != originalProfile.emergencyName ||
-        emergencyEmail != originalProfile.emergencyEmail ||
-        emergencyRelation != originalProfile.emergencyRelation ||
-        emergencyPhoneNumber != originalProfile.emergencyPhoneNumber
+                dateOfBirth != originalProfile.dateOfBirth ||
+                email != originalProfile.email ||
+                phoneNumber != originalProfile.phoneNumber ||
+                address != originalProfile.address ||
+                suburb != originalProfile.suburb ||
+                state != originalProfile.state ||
+                postcode != originalProfile.postcode ||
+                country != originalProfile.country ||
+                gender != originalProfile.gender ||
+                emergencyName != originalProfile.emergencyName ||
+                emergencyEmail != originalProfile.emergencyEmail ||
+                emergencyRelation != originalProfile.emergencyRelation ||
+                emergencyPhoneNumber != originalProfile.emergencyPhoneNumber
     }
 
     fun revertChanges() {
@@ -117,7 +117,7 @@ fun Profile(onBack: () -> Unit = {}) {
         emergencyRelation = originalProfile.emergencyRelation
         emergencyPhoneNumber = originalProfile.emergencyPhoneNumber
     }
-    
+
 
     fun handleSave() {
         // Reset error states
@@ -125,32 +125,38 @@ fun Profile(onBack: () -> Unit = {}) {
         phoneNumberError = false
         emergencyEmailError = false
         emergencyPhoneNumberError = false
-        
+
+        // Validate dateOfBirth format (DD/MM/YYYY) before sending to database.
+        // Without this, a corrupted value silently causes calculateAgeFromDateOfBirth to return null.
+        if (dateOfBirth.isNotEmpty() && !dateOfBirth.matches(Regex("^\\d{2}/\\d{2}/\\d{4}$"))) {
+            errorMessage = "Date of birth must be in DD/MM/YYYY format"
+            return
+        }
 
         if (!email.isValidEmail()) {
             emailError = true
             errorMessage = "Please enter a valid email address"
             return
         }
-        
+
         if (!phoneNumber.isValidPhoneNumber()) {
             phoneNumberError = true
             errorMessage = "Phone number should contain only digits"
             return
         }
-        
+
         if (emergencyEmail.isNotEmpty() && !emergencyEmail.isValidEmail()) {
             emergencyEmailError = true
             errorMessage = "Please enter a valid emergency contact email address"
             return
         }
-        
+
         if (!emergencyPhoneNumber.isValidPhoneNumber()) {
             emergencyPhoneNumberError = true
             errorMessage = "Emergency contact phone number should contain only digits"
             return
         }
-        
+
         val updatedProfile = UserProfile(
             name = name,
             dateOfBirth = dateOfBirth,
@@ -184,7 +190,7 @@ fun Profile(onBack: () -> Unit = {}) {
             }
         }
     }
-    
+
     // Fetch user profile when composable is first rendered
     LaunchedEffect(Unit) {
         userProfileService.getCurrentUserProfile { result ->
@@ -209,7 +215,7 @@ fun Profile(onBack: () -> Unit = {}) {
             showSuccessMessage = false
         }
     }
-    
+
     // Hide error message after 5 seconds
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
@@ -222,7 +228,7 @@ fun Profile(onBack: () -> Unit = {}) {
         if (isLoading) {
             LoadingSpinner()
         }
-        
+
         if (showExitConfirmationDialog) {
             AlertDialog(
                 onDismissRequest = { showExitConfirmationDialog = false },
@@ -251,7 +257,7 @@ fun Profile(onBack: () -> Unit = {}) {
                 }
             )
         }
-        
+
         // Main content
         Column(
             modifier = Modifier
@@ -275,7 +281,7 @@ fun Profile(onBack: () -> Unit = {}) {
                     modifier        = Modifier.size(70.dp)
                 )
             }
-            
+
             // Your Details Section
             Text(
                 text = "Your Details",
@@ -310,9 +316,9 @@ fun Profile(onBack: () -> Unit = {}) {
             if (isEditMode) {
                 FormTextField(
                     value = email,
-                    onValueChange = { 
+                    onValueChange = {
                         email = it
-                        emailError = false 
+                        emailError = false
                     },
                     label = "Email",
                     isError = emailError,
@@ -325,9 +331,9 @@ fun Profile(onBack: () -> Unit = {}) {
             if (isEditMode) {
                 FormTextField(
                     value = phoneNumber,
-                    onValueChange = { 
+                    onValueChange = {
                         phoneNumber = it
-                        phoneNumberError = false 
+                        phoneNumberError = false
                     },
                     label = "Phone Number",
                     isError = phoneNumberError,
@@ -442,7 +448,7 @@ fun Profile(onBack: () -> Unit = {}) {
                             .fillMaxWidth()
                             .padding(bottom = 8.dp)
                     )
-                    
+
                     // Divider
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
@@ -451,7 +457,7 @@ fun Profile(onBack: () -> Unit = {}) {
                     )
                 }
             }
-            
+
             // Emergency Contact Section
             Text(
                 text = "Emergency Contact",
@@ -461,7 +467,7 @@ fun Profile(onBack: () -> Unit = {}) {
                     .fillMaxWidth()
                     .padding(top = 24.dp, bottom = 16.dp)
             )
-            
+
             // Emergency Contact Name Field
             if (isEditMode) {
                 FormTextField(
@@ -473,14 +479,14 @@ fun Profile(onBack: () -> Unit = {}) {
             } else {
                 ProfileField(label = "Name", value = emergencyName)
             }
-            
+
             // Emergency Contact Email Field
             if (isEditMode) {
                 FormTextField(
                     value = emergencyEmail,
-                    onValueChange = { 
+                    onValueChange = {
                         emergencyEmail = it
-                        emergencyEmailError = false 
+                        emergencyEmailError = false
                     },
                     label = "Email",
                     isError = emergencyEmailError,
@@ -489,7 +495,7 @@ fun Profile(onBack: () -> Unit = {}) {
             } else {
                 ProfileField(label = "Email", value = emergencyEmail)
             }
-            
+
             // Emergency Contact Relation Field - Dropdown
             if (isEditMode) {
                 val relationOptions = listOf("Spouse", "Parent", "Other family", "Friend", "Other")
@@ -503,14 +509,14 @@ fun Profile(onBack: () -> Unit = {}) {
             } else {
                 ProfileField(label = "Relation", value = emergencyRelation)
             }
-            
+
             // Emergency Contact Phone Number Field
             if (isEditMode) {
                 FormTextField(
                     value = emergencyPhoneNumber,
-                    onValueChange = { 
+                    onValueChange = {
                         emergencyPhoneNumber = it
-                        emergencyPhoneNumberError = false 
+                        emergencyPhoneNumberError = false
                     },
                     label = "Phone Number",
                     isError = emergencyPhoneNumberError,
@@ -519,11 +525,11 @@ fun Profile(onBack: () -> Unit = {}) {
             } else {
                 ProfileField(label = "Phone Number", value = emergencyPhoneNumber)
             }
-            
+
             // Add extra space at the bottom to ensure content is not hidden behind the buttons
             Spacer(modifier = Modifier.height(16.dp))
         }
-        
+
         // Fixed bottom surface with buttons and success message
         Surface(
             modifier = Modifier
@@ -543,7 +549,7 @@ fun Profile(onBack: () -> Unit = {}) {
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
-                
+
                 // Error message
                 errorMessage?.let { error ->
                     Card(
@@ -582,7 +588,7 @@ fun Profile(onBack: () -> Unit = {}) {
                 ) {
                     // Back button
                     OutlinedButton(
-                        onClick = { 
+                        onClick = {
                             if (isEditMode) {
                                 if (hasProfileChanges) {
                                     showExitConfirmationDialog = true
@@ -603,9 +609,9 @@ fun Profile(onBack: () -> Unit = {}) {
                     ) {
                         Text("Back")
                     }
-                    
+
                     Button(
-                        onClick = { 
+                        onClick = {
                             if (isEditMode) {
                                 if (!hasProfileChanges) isEditMode = false
                                 else handleSave()
@@ -646,7 +652,7 @@ fun ProfileField(label: String, value: String) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 4.dp)
         )
-        
+
         // Value
         Text(
             text = value,
@@ -655,7 +661,7 @@ fun ProfileField(label: String, value: String) {
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
         )
-        
+
         // Divider
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
