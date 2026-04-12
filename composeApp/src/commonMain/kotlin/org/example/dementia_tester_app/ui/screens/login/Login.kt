@@ -36,8 +36,8 @@ fun LoginIcon() {
  */
 @Composable
 fun Login(
-    onLogin: (String) -> Unit = {_ ->}, 
-    onSignUp: () -> Unit = {}, 
+    onLogin: (String) -> Unit = { _ -> },
+    onSignUp: () -> Unit = {},
     onForgotPassword: () -> Unit = {}
 ) {
     val EMAIL = "email"
@@ -48,10 +48,10 @@ fun Login(
 
     // Using a single map to track all field error states
     var fieldErrors by remember { mutableStateOf(mapOf<String, Boolean>()) }
-    
+
     // Helper function to get error state for a field
     fun isFieldError(field: String): Boolean = fieldErrors[field] == true
-    
+
     // Helper function to clear error for a field
     fun clearFieldError(field: String) {
         if (fieldErrors.containsKey(field)) {
@@ -59,11 +59,21 @@ fun Login(
         }
     }
 
+    // FIX: Added email format validation using a standard regex.
+    // Previously only empty-field checks were performed, meaning a malformed
+    // email like "notanemail" or "missing@" would still trigger a network call.
+    // This check runs before signIn() and surfaces a clear error to the user
+    // without making an unnecessary Firebase request.
+    fun isValidEmail(value: String): Boolean {
+        return Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+            .matches(value.trim())
+    }
+
     var showErrorMessage by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("Please enter all required fields") }
-    
+
     val authService = remember { AuthService() }
-    
+
     var isLoading by remember { mutableStateOf(false) }
 
     Column(
@@ -85,7 +95,7 @@ fun Login(
         // Email Field
         FormTextField(
             value = email,
-            onValueChange = { 
+            onValueChange = {
                 email = it
                 clearFieldError(EMAIL)
                 showErrorMessage = false
@@ -98,7 +108,7 @@ fun Login(
         // Password Field
         FormTextField(
             value = password,
-            onValueChange = { 
+            onValueChange = {
                 password = it
                 clearFieldError(PASSWORD)
                 showErrorMessage = false
@@ -124,8 +134,8 @@ fun Login(
 
         // Login Button
         Button(
-            onClick = { 
-                // Validate fields using the shared validation utility
+            onClick = {
+                // Step 1: Check for empty fields using the shared validation utility
                 fieldErrors = validateFields(
                     mapOf(
                         EMAIL to email,
@@ -134,11 +144,15 @@ fun Login(
                 )
 
                 if (fieldErrors.isNotEmpty()) {
-                    
                     errorMessage = "Please enter all required fields"
                     showErrorMessage = true
+                    // Step 2: Check email format before making any network call
+                } else if (!isValidEmail(email)) {
+                    fieldErrors = mapOf(EMAIL to true)
+                    errorMessage = "Please enter a valid email address"
+                    showErrorMessage = true
                 } else {
-                    // All fields are filled, proceed with login
+                    // All fields are valid, proceed with login
                     isLoading = true
                     authService.signIn(email, password) { result ->
                         isLoading = false
