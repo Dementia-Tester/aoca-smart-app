@@ -6,6 +6,10 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import org.example.dementia_tester_app.notifications.NotificationManagerProvider
+import java.text.SimpleDateFormat
+import java.util.*
+import android.util.Log
 
 /**
  * Interface for reminder service
@@ -14,6 +18,45 @@ actual class ReminderService actual constructor() {
 
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val notificationManager = NotificationManagerProvider.getNotificationManager()
+
+    private fun scheduleLocalNotification(reminder: Reminder) {
+        if (reminder.taskActive && !reminder.taskTime.isNullOrBlank() && !reminder.id.isNullOrBlank()) {
+            try {
+                val timeString = reminder.taskTime!! // UI format is "HH:MMAM/PM" (e.g., "11:19PM")
+                val sdf = SimpleDateFormat("hh:mm a", Locale.US)
+                val normalizedTimeString = timeString.replace("AM", " AM").replace("PM", " PM")
+                val date = sdf.parse(normalizedTimeString)
+                
+                if (date != null) {
+                    val calendar = Calendar.getInstance()
+                    val now = Calendar.getInstance()
+                    
+                    val timeCalendar = Calendar.getInstance()
+                    timeCalendar.time = date
+                    
+                    calendar.set(Calendar.HOUR_OF_DAY, timeCalendar.get(Calendar.HOUR_OF_DAY))
+                    calendar.set(Calendar.MINUTE, timeCalendar.get(Calendar.MINUTE))
+                    calendar.set(Calendar.SECOND, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
+                    
+                    // If time is in the past, schedule for tomorrow
+                    if (calendar.before(now)) {
+                        calendar.add(Calendar.DATE, 1)
+                    }
+                    
+                    val message = "Reminder: ${reminder.taskName} (${reminder.taskType})"
+                    notificationManager.scheduleNotificationAt(reminder.id!!, message, calendar.timeInMillis)
+                    Log.d("ReminderService", "Scheduled notification for ${reminder.id} at ${calendar.time}")
+                }
+            } catch (e: Exception) {
+                Log.e("ReminderService", "Failed to schedule notification: ${e.message}")
+            }
+        } else if (!reminder.id.isNullOrBlank()) {
+            notificationManager.cancelNotification(reminder.id!!)
+            Log.d("ReminderService", "Cancelled notification for ${reminder.id}")
+        }
+    }
 
 
     /**
@@ -55,6 +98,7 @@ actual class ReminderService actual constructor() {
         )
         newReminderRef.setValue(toStore)
             .addOnSuccessListener {
+                scheduleLocalNotification(reminder)
                 callback(ReminderResult.Success(Unit))
             }
             .addOnFailureListener { e ->
@@ -135,6 +179,20 @@ actual class ReminderService actual constructor() {
 
         remindersRef.child(reminderId).updateChildren(filteredUpdates)
             .addOnSuccessListener {
+                // Fetch the full reminder to reschedule it correctly
+                remindersRef.child(reminderId).get().addOnSuccessListener { snapshot ->
+                    val taskType = snapshot.child("taskType").value?.toString()
+                    val taskTime = snapshot.child("taskTime").value?.toString()
+                    val taskName = snapshot.child("taskName").value?.toString()
+                    val raw = snapshot.child("taskActive").value
+                    val taskActive = when (raw) {
+                        is Boolean -> raw
+                        is Number -> raw.toInt() != 0
+                        else -> true
+                    }
+                    val updatedReminder = Reminder(reminderId, auth.currentUser?.uid, taskType, taskTime, taskName, taskActive)
+                    scheduleLocalNotification(updatedReminder)
+                }
                 callback(ReminderResult.Success(Unit))
             }
             .addOnFailureListener { e ->
@@ -154,6 +212,7 @@ actual class ReminderService actual constructor() {
         val remindersRef = getUserRemindersRef() ?: return callback(ReminderResult.Error("User not authenticated."))
         remindersRef.child(reminderID).removeValue()
             .addOnSuccessListener {
+                notificationManager.cancelNotification(reminderID)
                 callback(ReminderResult.Success(Unit))
             }
             .addOnFailureListener { e ->

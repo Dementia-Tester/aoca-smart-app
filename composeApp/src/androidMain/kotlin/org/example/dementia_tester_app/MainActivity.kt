@@ -43,12 +43,8 @@ class MainActivity : ComponentActivity() {
     ) { isGranted ->
         if (isGranted) {
             Log.d(TAG, "Notification permission granted")
-            // Permission granted, initialize notification manager
-            initializeNotificationManager()
         } else {
             Log.d(TAG, "Notification permission denied")
-            // Permission denied, handle gracefully
-            // You might want to show a message to the user
         }
     }
     
@@ -59,6 +55,10 @@ class MainActivity : ComponentActivity() {
         // Ensure our notification channel exists at app start
         ensureHealthChannel()
         
+        // Initialize the notification manager with context IMMEDIATELY
+        // to avoid UninitializedPropertyAccessException when App() is composed.
+        initializeNotificationManager()
+
         // Check and request notification permission if needed
         checkNotificationPermission()
         
@@ -73,17 +73,12 @@ class MainActivity : ComponentActivity() {
             when (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)) {
                 PackageManager.PERMISSION_GRANTED -> {
                     Log.d(TAG, "Notification permission already granted")
-                    // Permission already granted, initialize notification manager
-                    initializeNotificationManager()
                 }
                 else -> {
                     // Request the permission
                     requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
-        } else {
-            // For older Android versions, no runtime permission needed
-            initializeNotificationManager()
         }
     }
     
