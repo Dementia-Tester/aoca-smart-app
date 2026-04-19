@@ -59,8 +59,8 @@ data class UserAttempts(
     val lastUpdated: String = "",
     val ncdCategory: String = "",
     val totalScore: Int = 0,
+    val totalQuestions: Int = 0,
     val type: UserQuizType
-
 )
 
 data class UserResults(

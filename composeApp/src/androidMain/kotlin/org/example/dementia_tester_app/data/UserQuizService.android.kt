@@ -289,8 +289,8 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
                                 lastUpdated = lastUpdated,
                                 ncdCategory = ncdCategory,
                                 totalScore = totalScore,
+                                totalQuestions = attemptsList.size,
                                 type = type
-
                             )
 
                             // Add to the list of UserResults
@@ -305,25 +305,53 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
                 } else {
                     // Health Survey: return only completed attempts with their total scores
                     val userResultsList = mutableListOf<UserResults>()
-                    snapshot.children.forEach { attemptSnapshot ->
-                        val attemptKey = attemptSnapshot.key ?: return@forEach
-                        if (!attemptKey.startsWith("Attempt_")) return@forEach
-                        val isComplete = parseSurveyComplete(attemptSnapshot.child("surveyComplete").value)
-                        if (!isComplete) return@forEach
+                    fetchSurveyQuestions { questionsResult ->
+                        if (questionsResult is DatabaseResult.Success) {
+                            val totalQuestionsCount = questionsResult.data.size
+                            snapshot.children.forEach { attemptSnapshot ->
+                                val attemptKey = attemptSnapshot.key ?: return@forEach
+                                if (!attemptKey.startsWith("Attempt_")) return@forEach
+                                val isComplete = parseSurveyComplete(attemptSnapshot.child("surveyComplete").value)
+                                if (!isComplete) return@forEach
 
-                        val totalScore = attemptSnapshot.child("Total Score").value?.toString()?.toIntOrNull() ?: 0
-                        val lastUpdated = attemptSnapshot.child("Last Updated").value?.toString()
-                            ?: attemptSnapshot.child("timestamp").value?.toString() ?: ""
+                                val totalScore = attemptSnapshot.child("Total Score").value?.toString()?.toIntOrNull() ?: 0
+                                val lastUpdated = attemptSnapshot.child("Last Updated").value?.toString()
+                                    ?: attemptSnapshot.child("timestamp").value?.toString() ?: ""
 
-                        val userAttempts = UserAttempts(
-                            attempts = emptyList(),
-                            lastUpdated = lastUpdated,
-                            totalScore = totalScore,
-                            type = type
-                        )
-                        userResultsList.add(UserResults(attempts = listOf(userAttempts)))
+                                val userAttempts = UserAttempts(
+                                    attempts = emptyList(),
+                                    lastUpdated = lastUpdated,
+                                    totalScore = totalScore,
+                                    totalQuestions = totalQuestionsCount,
+                                    type = type
+                                )
+                                userResultsList.add(UserResults(attempts = listOf(userAttempts)))
+                            }
+                            callback(DatabaseResult.Success(userResultsList))
+                        } else {
+                            // Fallback if questions can't be fetched
+                            snapshot.children.forEach { attemptSnapshot ->
+                                val attemptKey = attemptSnapshot.key ?: return@forEach
+                                if (!attemptKey.startsWith("Attempt_")) return@forEach
+                                val isComplete = parseSurveyComplete(attemptSnapshot.child("surveyComplete").value)
+                                if (!isComplete) return@forEach
+
+                                val totalScore = attemptSnapshot.child("Total Score").value?.toString()?.toIntOrNull() ?: 0
+                                val lastUpdated = attemptSnapshot.child("Last Updated").value?.toString()
+                                    ?: attemptSnapshot.child("timestamp").value?.toString() ?: ""
+
+                                val userAttempts = UserAttempts(
+                                    attempts = emptyList(),
+                                    lastUpdated = lastUpdated,
+                                    totalScore = totalScore,
+                                    totalQuestions = 0,
+                                    type = type
+                                )
+                                userResultsList.add(UserResults(attempts = listOf(userAttempts)))
+                            }
+                            callback(DatabaseResult.Success(userResultsList))
+                        }
                     }
-                    callback(DatabaseResult.Success(userResultsList))
                 }
             }
             .addOnFailureListener { e ->

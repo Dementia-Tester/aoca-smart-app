@@ -49,7 +49,7 @@ fun QuizSummary(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "Total Score: $totalScore",
+                    text = "Total Score: $totalScore / ${questions.size * 4}",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,

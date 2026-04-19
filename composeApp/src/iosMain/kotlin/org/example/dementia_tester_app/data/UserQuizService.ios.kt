@@ -171,34 +171,39 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
                         lastUpdated = lastUpdated,
                         ncdCategory = ncdCategory,
                         totalScore = totalScore,
+                        totalQuestions = attempts.size,
                         type = type
                     )
                     userResultsList.add(UserResults(attempts = listOf(userAttempts)))
                 }
                 callback(DatabaseResult.Success(userResultsList))
             } else {
-                val userResultsList = mutableListOf<UserResults>()
-                for ((k, v) in attemptsRoot) {
-                    val key = k?.toString() ?: continue
-                    if (!key.startsWith("Attempt_")) continue
-                    val attemptMap = when (v) {
-                        is Map<*, *> -> v
-                        is NSDictionary -> nsDictionaryToKotlinMap(v)
-                        else -> null
-                    } ?: continue
-                    val isComplete = anyToBoolean(attemptMap["surveyComplete"]) ?: false
-                    if (!isComplete) continue
-                    val totalScore = anyToInt(attemptMap["Total Score"]) ?: 0
-                    val lastUpdated = anyToString(attemptMap["Last Updated"]) ?: anyToString(attemptMap["timestamp"]) ?: ""
-                    val ua = UserAttempts(
-                        attempts = emptyList(),
-                        lastUpdated = lastUpdated,
-                        totalScore = totalScore,
-                        type = type
-                    )
-                    userResultsList.add(UserResults(attempts = listOf(ua)))
+                fetchSurveyQuestions { qRes ->
+                    val totalQuestionsCount = if (qRes is DatabaseResult.Success) qRes.data.size else 0
+                    val userResultsList = mutableListOf<UserResults>()
+                    for ((k, v) in attemptsRoot) {
+                        val key = k?.toString() ?: continue
+                        if (!key.startsWith("Attempt_")) continue
+                        val attemptMap = when (v) {
+                            is Map<*, *> -> v
+                            is NSDictionary -> nsDictionaryToKotlinMap(v)
+                            else -> null
+                        } ?: continue
+                        val isComplete = anyToBoolean(attemptMap["surveyComplete"]) ?: false
+                        if (!isComplete) continue
+                        val totalScore = anyToInt(attemptMap["Total Score"]) ?: 0
+                        val lastUpdated = anyToString(attemptMap["Last Updated"]) ?: anyToString(attemptMap["timestamp"]) ?: ""
+                        val ua = UserAttempts(
+                            attempts = emptyList(),
+                            lastUpdated = lastUpdated,
+                            totalScore = totalScore,
+                            totalQuestions = totalQuestionsCount,
+                            type = type
+                        )
+                        userResultsList.add(UserResults(attempts = listOf(ua)))
+                    }
+                    callback(DatabaseResult.Success(userResultsList))
                 }
-                callback(DatabaseResult.Success(userResultsList))
             }
         }
     }

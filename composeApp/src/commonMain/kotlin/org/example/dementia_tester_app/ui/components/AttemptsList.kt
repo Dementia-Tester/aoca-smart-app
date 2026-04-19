@@ -159,7 +159,7 @@ private fun AttemptItemCard(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Score: ${attempt.totalScore}",
+                            text = "Score: ${attempt.totalScore} / ${attempt.totalQuestions * 4}",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold
                         )

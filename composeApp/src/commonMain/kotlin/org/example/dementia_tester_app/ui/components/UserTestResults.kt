@@ -192,7 +192,7 @@ private fun ResultsOverviewCard(
         Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
             Column(Modifier.weight(1f)) {
                 Text("Attempt: $attemptNumber", fontSize = TextSizes.OVERVIEW)
-                Text("Total Score: ${attempt.totalScore}", fontSize = TextSizes.OVERVIEW)
+                Text("Total Score: ${attempt.totalScore} / ${attempt.totalQuestions * 4}", fontSize = TextSizes.OVERVIEW)
             }
             Column(Modifier.weight(1f)) {
                 Text("Date: ${attempt.lastUpdated}", fontSize = TextSizes.OVERVIEW)
@@ -417,7 +417,7 @@ private fun MiniGameAttemptDetails(
             Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
                 Column(Modifier.weight(1f)) {
                     Text("Attempt: $attemptNumber", fontSize = TextSizes.OVERVIEW)
-                    Text("Total Score: ${attempt.score}", fontSize = TextSizes.OVERVIEW)
+                    Text("Total Score: ${attempt.score} / 100", fontSize = TextSizes.OVERVIEW)
                 }
             }
         }
