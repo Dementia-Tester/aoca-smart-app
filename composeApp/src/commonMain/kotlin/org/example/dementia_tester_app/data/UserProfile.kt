@@ -42,7 +42,8 @@ data class UserProfile(
     val emergencyName: String = "",
     val emergencyEmail: String = "",
     val emergencyRelation: String = "",
-    val emergencyPhoneNumber: String = ""
+    val emergencyPhoneNumber: String = "",
+    val profileImageUrl: String = ""
 ) {
     /**
      * Convert the UserProfile to a map for Firestore
@@ -87,7 +88,8 @@ data class UserProfile(
             "emergencyContactName" to emergencyName,
             "emergencyEmail" to emergencyEmail,
             "relation" to emergencyRelation,
-            "emergencyContactNumber" to emergencyPhoneNumber
+            "emergencyContactNumber" to emergencyPhoneNumber,
+            "profileImageUrl" to profileImageUrl
         )
     }
 
@@ -206,7 +208,8 @@ data class UserProfile(
                 emergencyName = getStringValue("emergencyContactName"),
                 emergencyEmail = getStringValue("emergencyEmail"),
                 emergencyRelation = getStringValue("relation"),
-                emergencyPhoneNumber = getStringValue("emergencyContactNumber")
+                emergencyPhoneNumber = getStringValue("emergencyContactNumber"),
+                profileImageUrl = getStringValue("profileImageUrl")
             )
         }
     }

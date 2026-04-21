@@ -44,11 +44,13 @@ kotlin {
             implementation("com.google.firebase:firebase-auth:22.3.1")
             implementation("com.google.firebase:firebase-firestore:24.10.0")
             implementation("com.google.firebase:firebase-database-ktx")
+            implementation("com.google.firebase:firebase-storage-ktx")
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation("androidx.activity:activity-compose:1.10.1")
             implementation("androidx.fragment:fragment-ktx:1.8.9")
+            implementation("androidx.exifinterface:exifinterface:1.3.7")
     }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -57,6 +59,8 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+            implementation("io.coil-kt.coil3:coil-compose:3.0.4")
+            implementation("io.coil-kt.coil3:coil-network-okhttp:3.0.4")
             implementation("org.jetbrains.compose.material:material-icons-core:1.7.3")
             implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
         }

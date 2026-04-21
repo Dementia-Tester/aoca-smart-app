@@ -22,7 +22,16 @@ import org.example.dementia_tester_app.ui.components.*
 import org.example.dementia_tester_app.utils.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhotoCamera
 import org.example.dementia_tester_app.ui.components.LoadingSpinner
+import coil3.compose.AsyncImage
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.border
+import org.example.dementia_tester_app.ui.components.rememberImagePickerLauncher
 
 @Composable
 fun Profile(onBack: () -> Unit = {}) {
@@ -265,24 +274,85 @@ fun Profile(onBack: () -> Unit = {}) {
                 .padding(horizontal = 32.dp, vertical = 16.dp)
                 .padding(bottom = 80.dp)
                 .verticalScroll(scrollState),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        val imagePickerLauncher = rememberImagePickerLauncher { bytes ->
+            isLoading = true
+            userProfileService.uploadProfileImage(bytes) { result ->
+                when (result) {
+                    is DatabaseResult.Success -> {
+                        val imageUrl = result.data
+                        // Update the local profile state and save it
+                        val updatedProfile = userProfile.copy(profileImageUrl = imageUrl)
+                        userProfileService.updateUserProfile(updatedProfile) { updateResult ->
+                            isLoading = false
+                            if (updateResult is DatabaseResult.Success) {
+                                userProfile = updatedProfile
+                                originalProfile = updatedProfile
+                                showSuccessMessage = true
+                            } else if (updateResult is DatabaseResult.Error) {
+                                errorMessage = "Failed to update profile image: ${updateResult.message}"
+                            }
+                        }
+                    }
+                    is DatabaseResult.Error -> {
+                        isLoading = false
+                        errorMessage = "Failed to upload image: ${result.message}"
+                    }
+                }
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            Column(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color.LightGray)
+                    .then(if (isEditMode) Modifier.clickable { imagePickerLauncher() } else Modifier),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector     = Icons.Default.Person,
-                    contentDescription = "Profile Icon",
-                    tint            = Color.Black,
-                    modifier        = Modifier.size(70.dp)
-                )
-            }
+                if (userProfile.profileImageUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = userProfile.profileImageUrl,
+                        contentDescription = "Profile Image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Profile Icon",
+                        tint = Color.Black,
+                        modifier = Modifier.size(70.dp)
+                    )
+                }
 
-            // Your Details Section
+                if (isEditMode) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoCamera,
+                            contentDescription = "Upload Image",
+                            tint = Color.White,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // Your Details Section
             Text(
                 text = "Your Details",
                 fontSize = 18.sp,

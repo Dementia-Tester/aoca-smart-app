@@ -6,6 +6,8 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
+import android.net.Uri
 
 /**
  * Android implementation of UserProfileService using Firebase Realtime Database
@@ -154,5 +156,31 @@ actual class UserProfileService {
                 callback(DatabaseResult.Error("Failed to fetch users: ${error.message}"))
             }
         })
+    }
+
+    /**
+     * Upload a profile image to Firebase Storage
+     */
+    actual fun uploadProfileImage(imageBytes: ByteArray, callback: (DatabaseResult<String>) -> Unit) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            callback(DatabaseResult.Error("No user is signed in"))
+            return
+        }
+
+        val storageRef = com.google.firebase.ktx.Firebase.storage.reference
+        val profileImageRef = storageRef.child("profile_images/${userId}.jpg")
+
+        profileImageRef.putBytes(imageBytes)
+            .addOnSuccessListener {
+                profileImageRef.downloadUrl.addOnSuccessListener { uri ->
+                    callback(DatabaseResult.Success(uri.toString()))
+                }.addOnFailureListener { e ->
+                    callback(DatabaseResult.Error("Failed to get download URL: ${e.message}"))
+                }
+            }
+            .addOnFailureListener { e ->
+                callback(DatabaseResult.Error("Failed to upload image: ${e.message}"))
+            }
     }
 }

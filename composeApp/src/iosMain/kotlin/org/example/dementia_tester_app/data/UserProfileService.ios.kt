@@ -6,7 +6,11 @@ import cocoapods.FirebaseDatabase.FIRDataSnapshot
 import platform.Foundation.NSDictionary
 import platform.Foundation.NSError
 import platform.Foundation.NSNull
-import platform.Foundation.allKeys
+import cocoapods.FirebaseStorage.*
+import platform.Foundation.*
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
 
 private fun Map<String, Any?>.toObjcMap(): Map<Any?, Any?> =
     this.entries.associate { (k: String, v: Any?) ->
@@ -205,5 +209,49 @@ actual class UserProfileService {
             }
         }
         return result
+    }
+
+    /**
+     * Upload a profile image to Firebase Storage
+     */
+    actual fun uploadProfileImage(imageBytes: ByteArray, callback: (DatabaseResult<String>) -> Unit) {
+        val userId = FIRAuth.auth()?.currentUser()?.uid()
+        if (userId == null) {
+            callback(DatabaseResult.Error("No user is signed in"))
+            return
+        }
+
+        val storage = FIRStorage.storage()
+        val storageRef = storage.reference()
+        val profileImageRef = storageRef.child("profile_images/${userId}.jpg")
+
+        val data = imageBytes.toNSData()
+        val metadata = FIRStorageMetadata()
+        metadata.contentType = "image/jpeg"
+
+        profileImageRef.putData(data, metadata) { _, error ->
+            if (error != null) {
+                callback(DatabaseResult.Error("Failed to upload image: ${error.localizedDescription}"))
+                return@putData
+            }
+            
+            profileImageRef.downloadURLWithCompletion { url, downloadError ->
+                if (downloadError != null) {
+                    callback(DatabaseResult.Error("Failed to get download URL: ${downloadError.localizedDescription}"))
+                } else if (url != null) {
+                    callback(DatabaseResult.Success(url.absoluteString!!))
+                } else {
+                    callback(DatabaseResult.Error("Download URL is null"))
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalForeignApi::class)
+    private fun ByteArray.toNSData(): NSData {
+        if (isEmpty()) return NSData()
+        return usePinned { pinned ->
+            NSData.dataWithBytes(pinned.addressOf(0), size.toULong())
+        }
     }
 }

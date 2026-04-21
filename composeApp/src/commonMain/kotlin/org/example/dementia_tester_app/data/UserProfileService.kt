@@ -31,4 +31,11 @@ expect class UserProfileService() {
      * @param callback Callback to be invoked with the result of the operation
      */
     fun getAllUsers(callback: (DatabaseResult<List<UserProfile>>) -> Unit)
+
+    /**
+     * Upload a profile image
+     * @param imageBytes The image data as a ByteArray
+     * @param callback Callback to be invoked with the result of the operation, containing the URL of the uploaded image
+     */
+    fun uploadProfileImage(imageBytes: ByteArray, callback: (DatabaseResult<String>) -> Unit)
 }
