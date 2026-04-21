@@ -1,3 +1,4 @@
+// Added click handling for chat items and new chat button to fix Issue #4
 package org.example.dementia_tester_app.ui.screens
 
 import androidx.compose.foundation.background
@@ -15,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -24,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,10 +46,10 @@ import org.example.dementia_tester_app.ui.components.FormColors
  */
 @Composable
 fun Chat() {
-    // State for search query
     var searchQuery by remember { mutableStateOf("") }
-    
-    // Mock chat data
+    var showNewChatDialog by remember { mutableStateOf(false) }
+    var selectedChat by remember { mutableStateOf<ChatItem?>(null) }
+
     val chats = remember {
         listOf(
             ChatItem(
@@ -81,27 +84,25 @@ fun Chat() {
             )
         )
     }
-    
-    // Filtered chats based on search query
+
     val filteredChats = remember(searchQuery) {
         if (searchQuery.isEmpty()) {
             chats
         } else {
-            chats.filter { 
-                it.name.contains(searchQuery, ignoreCase = true) || 
-                it.lastMessage.contains(searchQuery, ignoreCase = true) 
+            chats.filter {
+                it.name.contains(searchQuery, ignoreCase = true) ||
+                        it.lastMessage.contains(searchQuery, ignoreCase = true)
             }
         }
     }
-    
+
     val scrollState = rememberScrollState()
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        // Search bar
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -109,7 +110,7 @@ fun Chat() {
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
             placeholder = { Text("Search chats...") },
-            leadingIcon = { 
+            leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
@@ -124,10 +125,9 @@ fun Chat() {
             ),
             singleLine = true
         )
-        
-        // Start New Chat button
+
         Button(
-            onClick = { /* Handle new chat */ },
+            onClick = { showNewChatDialog = true },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
@@ -138,11 +138,10 @@ fun Chat() {
         ) {
             Text(
                 text = "Start New Chat",
-                fontSize = 16.sp,
+                fontSize = 16.sp
             )
         }
-        
-        // Chat list
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -163,11 +162,50 @@ fun Chat() {
                 }
             } else {
                 filteredChats.forEach { chat ->
-                    ChatListItem(chat = chat)
+                    ChatListItem(
+                        chat = chat,
+                        onChatClick = {
+                            selectedChat = chat
+                        }
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
+    }
+
+    if (showNewChatDialog) {
+        AlertDialog(
+            onDismissRequest = { showNewChatDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showNewChatDialog = false }) {
+                    Text("OK", color = FormColors.green)
+                }
+            },
+            title = {
+                Text("New Chat")
+            },
+            text = {
+                Text("Start New Chat button is now working. Navigation can be added later.")
+            }
+        )
+    }
+
+    selectedChat?.let { chat ->
+        AlertDialog(
+            onDismissRequest = { selectedChat = null },
+            confirmButton = {
+                TextButton(onClick = { selectedChat = null }) {
+                    Text("OK", color = FormColors.green)
+                }
+            },
+            title = {
+                Text(chat.name)
+            },
+            text = {
+                Text("Chat item click is working.\n\nLast message: ${chat.lastMessage}")
+            }
+        )
     }
 }
 
@@ -185,12 +223,15 @@ data class ChatItem(
  * Composable for displaying a chat list item
  */
 @Composable
-fun ChatListItem(chat: ChatItem) {
+fun ChatListItem(
+    chat: ChatItem,
+    onChatClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .clickable { /* Handle chat click */ },
+            .clickable { onChatClick() },
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
@@ -221,7 +262,7 @@ fun ChatListItem(chat: ChatItem) {
                     maxLines = 2
                 )
             }
-            
+
             Column(
                 horizontalAlignment = Alignment.End
             ) {
@@ -231,7 +272,7 @@ fun ChatListItem(chat: ChatItem) {
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
-                
+
                 if (chat.unreadCount > 0) {
                     Box(
                         modifier = Modifier
