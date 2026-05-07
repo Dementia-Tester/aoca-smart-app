@@ -176,6 +176,7 @@ fun AppMenuContent(
                 "🩺" to "Health Survey",
                 "🏃" to "Activities",
                 "📅" to "Book Appointment",
+                "📜" to "Appointment History",
                 "📞" to "Contact",
                 "💬" to "Chat",
                 "⚙️" to "Settings",
@@ -222,3 +223,4 @@ fun AppMenuContent(
         }
     }
 }
+
