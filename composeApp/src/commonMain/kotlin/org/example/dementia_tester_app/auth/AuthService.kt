@@ -12,6 +12,7 @@ sealed class AuthResult {
  * Interface for authentication service
  */
 expect class AuthService() {
+
     /**
      * Sign in with email and password
      * @param email User's email
@@ -69,4 +70,14 @@ expect class AuthService() {
      * @return the user's ID if signed in, null otherwise
      */
     fun getCurrentUserId(): String?
+
+    /**
+     * Change password for the currently signed-in user
+     */
+    fun changePassword(newPassword: String, callback: (AuthResult) -> Unit)
+
+    /**
+     * Delete the currently signed-in user account
+     */
+    fun deleteAccount(callback: (AuthResult) -> Unit)
 }

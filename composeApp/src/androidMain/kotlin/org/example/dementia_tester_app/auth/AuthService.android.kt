@@ -109,4 +109,41 @@ actual class AuthService actual constructor() {
     actual fun getCurrentUserId(): String? {
         return auth.currentUser?.uid
     }
+    actual fun changePassword(newPassword: String, callback: (AuthResult) -> Unit) {
+        val user = auth.currentUser
+
+        if (user != null) {
+            user.updatePassword(newPassword)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        callback(AuthResult.Success)
+                    } else {
+                        val errorMessage =
+                            "Failed to change password: ${task.exception?.message ?: "Unknown error"}"
+                        callback(AuthResult.Error(errorMessage))
+                    }
+                }
+        } else {
+            callback(AuthResult.Error("No user is currently signed in"))
+        }
+    }
+
+    actual fun deleteAccount(callback: (AuthResult) -> Unit) {
+        val user = auth.currentUser
+
+        if (user != null) {
+            user.delete()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        callback(AuthResult.Success)
+                    } else {
+                        val errorMessage =
+                            "Failed to delete account: ${task.exception?.message ?: "Unknown error"}"
+                        callback(AuthResult.Error(errorMessage))
+                    }
+                }
+        } else {
+            callback(AuthResult.Error("No user is currently signed in"))
+        }
+    }
 }
