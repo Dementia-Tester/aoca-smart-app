@@ -556,3 +556,4 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
+
