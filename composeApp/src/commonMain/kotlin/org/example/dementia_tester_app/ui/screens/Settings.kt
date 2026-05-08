@@ -36,7 +36,9 @@ import org.example.dementia_tester_app.ui.components.FormToggle
  * Settings screen with collapsible sections for different settings categories
  */
 @Composable
-fun Settings() {
+fun Settings(
+    onAccountDeleted: () -> Unit
+) {
 
     val scrollState = rememberScrollState()
     val authService = remember { AuthService() }
@@ -359,8 +361,10 @@ fun Settings() {
                             accountMessage =
                                 when (result) {
 
-                                    is AuthResult.Success ->
+                                    is AuthResult.Success -> {
+                                        onAccountDeleted()
                                         "Account deleted successfully."
+                                    }
 
                                     is AuthResult.Error ->
                                         result.message
