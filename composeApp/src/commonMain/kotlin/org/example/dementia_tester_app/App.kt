@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import org.example.dementia_tester_app.ui.components.AppMenuContent
 import org.example.dementia_tester_app.ui.components.PageLayout
 import org.example.dementia_tester_app.ui.screens.Activities
+import org.example.dementia_tester_app.ui.screens.AppointmentHistory
 import org.example.dementia_tester_app.ui.screens.BookAppointment
 import org.example.dementia_tester_app.ui.screens.Chat
 import org.example.dementia_tester_app.ui.screens.Contact
@@ -267,15 +268,10 @@ fun App() {
                                 currentScreen = getDashboardType()
                             }
                         )
+                        "Appointment History" -> AppointmentHistory()
                         "Contact" -> Contact()
                         "Chat" -> Chat()
-                        "Settings" -> Settings(
-                            onAccountDeleted = {
-                                authService.signOut()
-                                userType = UserType.USER
-                                currentScreen = "Login"
-                            }
-                        )
+                        "Settings" -> Settings()
                         "Help" -> Help()
                         "Profile" -> Profile(
                             onBack = {
@@ -301,3 +297,4 @@ fun App() {
         }
     }
 }
+
