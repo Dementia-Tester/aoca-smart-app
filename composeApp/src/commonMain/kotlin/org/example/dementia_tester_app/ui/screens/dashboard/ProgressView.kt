@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,7 +41,9 @@ import org.example.dementia_tester_app.data.UserGameResults
 import org.example.dementia_tester_app.data.UserQuizService
 import org.example.dementia_tester_app.data.UserQuizType
 import org.example.dementia_tester_app.ui.components.LoadingSpinner
+import org.example.dementia_tester_app.ui.components.ProgressSummary
 import org.example.dementia_tester_app.ui.components.UserTestResults
+import org.example.dementia_tester_app.data.UserAttempts
 
 /**
  * Progress view for users. Displays information about the user's results from the
@@ -209,6 +213,15 @@ fun ProgressView() {
             }
             // Display scores if available
             else if (hasScores) {
+                // Show summary for Cognitive Assessment and Health Survey
+                if (selectedScoreType == "Total Scores" || selectedScoreType == "Health Survey") {
+                    val latestAttempt = results.filterIsInstance<UserAttempts>().lastOrNull()
+                    latestAttempt?.let {
+                        ProgressSummary(it)
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
                 UserTestResults(GraphableAttempts(results))
             }
             // Display message if no scores are available
