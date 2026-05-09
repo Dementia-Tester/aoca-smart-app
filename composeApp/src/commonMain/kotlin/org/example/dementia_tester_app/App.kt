@@ -66,6 +66,7 @@ fun App() {
         var isLoadingProfile by remember { mutableStateOf(false) }
         // State to store the user's email for verification
         var userEmail by remember { mutableStateOf("") }
+        var profileRefreshKey by remember { mutableStateOf(0) }
 
         var currentScreen by remember { 
             mutableStateOf(
@@ -233,16 +234,19 @@ fun App() {
             ModalNavigationDrawer(
                 drawerState = drawerState,
                 drawerContent = {
-                    AppMenuContent(onMenuItemClick = { menuItem ->
-                        currentScreen = when {
-                            menuItem == "Dashboard" && userType == UserType.DOCTOR -> "DoctorDashboard"
-                            else -> menuItem
-                        }
+                    AppMenuContent(
+                        onMenuItemClick = { menuItem ->
+                            currentScreen = when {
+                                menuItem == "Dashboard" && userType == UserType.DOCTOR -> "DoctorDashboard"
+                                else -> menuItem
+                            }
 
-                        scope.launch {
-                            drawerState.close()
-                        }
-                    })
+                            scope.launch {
+                                drawerState.close()
+                            }
+                        },
+                        refreshKey = profileRefreshKey
+                    )
                 }
             ) {
                 // Use PageLayout to display the current screen
@@ -275,6 +279,7 @@ fun App() {
                         "Help" -> Help()
                         "Profile" -> Profile(
                             onBack = {
+                                profileRefreshKey++
                                 currentScreen = getDashboardType()
                             }
                         )

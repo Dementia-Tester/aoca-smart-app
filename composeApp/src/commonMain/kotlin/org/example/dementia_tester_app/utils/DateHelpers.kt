@@ -70,5 +70,5 @@ fun calculateAgeFromDateOfBirth(dateOfBirth: String): Int? {
     if (today < birthdayThisYear) {
         age--
     }
-    return age
+    return if (age <= 0) null else age
 }

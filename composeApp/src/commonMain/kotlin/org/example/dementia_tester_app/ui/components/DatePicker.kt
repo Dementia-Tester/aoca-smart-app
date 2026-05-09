@@ -73,7 +73,6 @@ fun DateField(
     modifier: Modifier = Modifier
 ) {
     if (!isEditable) {
-        // Non-editable view
         Column(modifier = modifier.fillMaxWidth().padding(bottom = 16.dp)) {
             Text(
                 text = label,
@@ -94,56 +93,54 @@ fun DateField(
         return
     }
 
-    // Editable view
     val currentYear = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.year
     val parts = date.split("/")
     val validatedDate = try {
         val parsedDay = parts.getOrNull(0)?.toIntOrNull() ?: 1
         val parsedMonth = parts.getOrNull(1)?.toIntOrNull() ?: 1
         val parsedYear = parts.getOrNull(2)?.toIntOrNull() ?: currentYear
-        LocalDate(parsedYear.coerceIn(currentYear, currentYear + 10), parsedMonth.coerceIn(1, 12), parsedDay.coerceIn(1, 31))
+
+        LocalDate(
+            parsedYear.coerceIn(currentYear - 120, currentYear),
+            parsedMonth.coerceIn(1, 12),
+            parsedDay.coerceIn(1, 31)
+        )
     } catch (e: Exception) {
-        LocalDate(currentYear, 1, 1) // Default to current year if parsing fails
+        LocalDate(currentYear, 1, 1)
     }
-    
-    // State for showing the date picker dialog
+
     var showDatePicker by remember { mutableStateOf(false) }
-    
-    val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
-    
-    // Set minimum date only if we want to allow dates after today
-    val minDate = remember { 
-        if (allowDatesAfterToday == false) null else today 
+
+    val today = remember {
+        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    }
+
+    val minDate = remember {
+        if (allowDatesAfterToday == false) null else today
     }
 
     Column(modifier = modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-        Text(
-            text = label,
-            color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
-        // Date field that shows the current date and opens the picker when clicked
         var expanded by remember { mutableStateOf(false) }
-        
+
         ExposedDropdownMenuBox(
             expanded = expanded,
-            onExpandedChange = { 
+            onExpandedChange = {
                 expanded = !expanded
-                showDatePicker = true 
+                showDatePicker = true
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
                 value = date,
-                onValueChange = { /* Read-only field, changes come from the picker */ },
+                onValueChange = { },
                 readOnly = true,
-                label = { Text("Select Date") },
+                label = {
+                    Text(label)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(
-                        type    = MenuAnchorType.PrimaryNotEditable
+                        type = MenuAnchorType.PrimaryNotEditable
                     ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = if (isError) FormColors.errorColor else FormColors.green,
@@ -162,19 +159,21 @@ fun DateField(
                 }
             )
         }
-        
+
         if (isError) {
             Spacer(Modifier.height(4.dp))
-            HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.error)
+            HorizontalDivider(
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.error
+            )
         }
-        
-        // Show date picker dialog when requested
+
         if (showDatePicker) {
             DatePickerDialog(
                 initialDate = validatedDate,
                 onDateSelected = { selectedDate ->
-                    // Format the selected date as DD/MM/YYYY
-                    val formattedDate = "${selectedDate.dayOfMonth}/${selectedDate.monthNumber}/${selectedDate.year}"
+                    val formattedDate =
+                        "${selectedDate.dayOfMonth}/${selectedDate.monthNumber}/${selectedDate.year}"
                     onDateChange(formattedDate)
                     showDatePicker = false
                 },

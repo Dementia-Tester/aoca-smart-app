@@ -60,7 +60,8 @@ fun AppHeader(
 
 @Composable
 fun AppMenuContent(
-    onMenuItemClick: (String) -> Unit
+    onMenuItemClick: (String) -> Unit,
+    refreshKey: Int = 0
 ) {
     // Create UserProfileService instance
     val userProfileService = remember { UserProfileService() }
@@ -73,7 +74,7 @@ fun AppMenuContent(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     
     // Fetch user profile when component is first rendered
-    LaunchedEffect(Unit) {
+    LaunchedEffect(refreshKey) {
         userProfileService.getCurrentUserProfile { result ->
             isLoading = false
             when (result) {

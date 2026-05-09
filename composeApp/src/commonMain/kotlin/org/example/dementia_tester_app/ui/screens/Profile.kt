@@ -1,67 +1,55 @@
 package org.example.dementia_tester_app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import org.example.dementia_tester_app.data.DatabaseResult
 import org.example.dementia_tester_app.data.UserProfile
 import org.example.dementia_tester_app.data.UserProfileService
 import org.example.dementia_tester_app.ui.components.*
 import org.example.dementia_tester_app.utils.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PhotoCamera
-import org.example.dementia_tester_app.ui.components.LoadingSpinner
-import coil3.compose.AsyncImage
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.border
-import org.example.dementia_tester_app.ui.components.rememberImagePickerLauncher
 
 @Composable
 fun Profile(onBack: () -> Unit = {}) {
-    // Create UserProfileService instance
     val userProfileService = remember { UserProfileService() }
 
-    // UI state
     var isEditMode by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showExitConfirmationDialog by remember { mutableStateOf(false) }
 
-    // Field error states
     var emailError by remember { mutableStateOf(false) }
     var phoneNumberError by remember { mutableStateOf(false) }
     var emergencyEmailError by remember { mutableStateOf(false) }
     var emergencyPhoneNumberError by remember { mutableStateOf(false) }
 
-    // User profile state
     var userProfile by remember { mutableStateOf(UserProfile()) }
-    // Original profile state (to detect changes and revert if needed)
     var originalProfile by remember { mutableStateOf(UserProfile()) }
 
-    // Derived state variables for easier access
     var name by remember { mutableStateOf("") }
     var dateOfBirth by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
-    // Address fields
     var address by remember { mutableStateOf("") }
     var suburb by remember { mutableStateOf("") }
     var state by remember { mutableStateOf("") }
@@ -73,7 +61,6 @@ fun Profile(onBack: () -> Unit = {}) {
     var emergencyRelation by remember { mutableStateOf("") }
     var emergencyPhoneNumber by remember { mutableStateOf("") }
 
-    // Update derived state when userProfile changes
     LaunchedEffect(userProfile) {
         name = userProfile.name
         dateOfBirth = userProfile.dateOfBirth
@@ -127,18 +114,20 @@ fun Profile(onBack: () -> Unit = {}) {
         emergencyPhoneNumber = originalProfile.emergencyPhoneNumber
     }
 
-
     fun handleSave() {
-        // Reset error states
         emailError = false
         phoneNumberError = false
         emergencyEmailError = false
         emergencyPhoneNumberError = false
 
-        // Validate dateOfBirth format (DD/MM/YYYY) before sending to database.
-        // Without this, a corrupted value silently causes calculateAgeFromDateOfBirth to return null.
-        if (dateOfBirth.isNotEmpty() && !dateOfBirth.matches(Regex("^\\d{2}/\\d{2}/\\d{4}$"))) {
-            errorMessage = "Date of birth must be in DD/MM/YYYY format"
+        if (dateOfBirth.isNotEmpty() && !dateOfBirth.matches(Regex("^\\d{1,2}/\\d{1,2}/\\d{4}$"))) {
+            errorMessage = "Date of birth must be in D/M/YYYY or DD/MM/YYYY format"
+            return
+        }
+
+        val calculatedAge = calculateAgeFromDateOfBirth(dateOfBirth)
+        if (dateOfBirth.isNotEmpty() && (calculatedAge == null || calculatedAge <= 0)) {
+            errorMessage = "Age cannot be 0. Please select a valid date of birth."
             return
         }
 
@@ -180,8 +169,10 @@ fun Profile(onBack: () -> Unit = {}) {
             emergencyName = emergencyName,
             emergencyEmail = emergencyEmail,
             emergencyRelation = emergencyRelation,
-            emergencyPhoneNumber = emergencyPhoneNumber
+            emergencyPhoneNumber = emergencyPhoneNumber,
+            profileImageUrl = userProfile.profileImageUrl
         )
+
         isLoading = true
 
         userProfileService.updateUserProfile(updatedProfile) { result ->
@@ -192,7 +183,13 @@ fun Profile(onBack: () -> Unit = {}) {
                     originalProfile = updatedProfile
                     isEditMode = false
                     showSuccessMessage = true
+                    userProfileService.getCurrentUserProfile { result ->
+                        if (result is DatabaseResult.Success) {
+                            userProfile = result.data
+                        }
+                    }
                 }
+
                 is DatabaseResult.Error -> {
                     errorMessage = "Failed to save profile: ${result.message}"
                 }
@@ -200,7 +197,6 @@ fun Profile(onBack: () -> Unit = {}) {
         }
     }
 
-    // Fetch user profile when composable is first rendered
     LaunchedEffect(Unit) {
         userProfileService.getCurrentUserProfile { result ->
             isLoading = false
@@ -210,6 +206,7 @@ fun Profile(onBack: () -> Unit = {}) {
                     originalProfile = result.data
                     errorMessage = null
                 }
+
                 is DatabaseResult.Error -> {
                     errorMessage = "Failed to load profile: ${result.message}"
                 }
@@ -217,7 +214,6 @@ fun Profile(onBack: () -> Unit = {}) {
         }
     }
 
-    // Hide success message after 5 seconds
     LaunchedEffect(showSuccessMessage) {
         if (showSuccessMessage) {
             kotlinx.coroutines.delay(5000)
@@ -225,7 +221,6 @@ fun Profile(onBack: () -> Unit = {}) {
         }
     }
 
-    // Hide error message after 5 seconds
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
             kotlinx.coroutines.delay(5000)
@@ -247,8 +242,8 @@ fun Profile(onBack: () -> Unit = {}) {
                     TextButton(
                         onClick = {
                             showExitConfirmationDialog = false
-                            revertChanges() // Revert to original values
-                            isEditMode = false // Exit edit mode
+                            revertChanges()
+                            isEditMode = false
                         }
                     ) {
                         Text("Yes")
@@ -256,10 +251,7 @@ fun Profile(onBack: () -> Unit = {}) {
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = {
-                            showExitConfirmationDialog = false
-                            // Stay in edit mode, do nothing
-                        }
+                        onClick = { showExitConfirmationDialog = false }
                     ) {
                         Text("Cancel")
                     }
@@ -267,92 +259,45 @@ fun Profile(onBack: () -> Unit = {}) {
             )
         }
 
-        // Main content
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 32.dp, vertical = 16.dp)
                 .padding(bottom = 80.dp)
                 .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        val imagePickerLauncher = rememberImagePickerLauncher { bytes ->
-            isLoading = true
-            userProfileService.uploadProfileImage(bytes) { result ->
-                when (result) {
-                    is DatabaseResult.Success -> {
-                        val imageUrl = result.data
-                        // Update the local profile state and save it
-                        val updatedProfile = userProfile.copy(profileImageUrl = imageUrl)
-                        userProfileService.updateUserProfile(updatedProfile) { updateResult ->
-                            isLoading = false
-                            if (updateResult is DatabaseResult.Success) {
-                                userProfile = updatedProfile
-                                originalProfile = updatedProfile
-                                showSuccessMessage = true
-                            } else if (updateResult is DatabaseResult.Error) {
-                                errorMessage = "Failed to update profile image: ${updateResult.message}"
-                            }
-                        }
-                    }
-                    is DatabaseResult.Error -> {
-                        isLoading = false
-                        errorMessage = "Failed to upload image: ${result.message}"
-                    }
-                }
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(Color.LightGray)
-                    .then(if (isEditMode) Modifier.clickable { imagePickerLauncher() } else Modifier),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (userProfile.profileImageUrl.isNotEmpty()) {
-                    AsyncImage(
-                        model = userProfile.profileImageUrl,
-                        contentDescription = "Profile Image",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile Icon",
-                        tint = Color.Black,
-                        modifier = Modifier.size(70.dp)
-                    )
-                }
-
-                if (isEditMode) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.3f)),
-                        contentAlignment = Alignment.Center
-                    ) {
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(Color.LightGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (userProfile.profileImageUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = userProfile.profileImageUrl,
+                            contentDescription = "Profile Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
                         Icon(
-                            imageVector = Icons.Default.PhotoCamera,
-                            contentDescription = "Upload Image",
-                            tint = Color.White,
-                            modifier = Modifier.size(40.dp)
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile Icon",
+                            tint = Color.Black,
+                            modifier = Modifier.size(70.dp)
                         )
                     }
                 }
             }
-        }
 
-        // Your Details Section
             Text(
                 text = "Your Details",
                 fontSize = 18.sp,
@@ -373,15 +318,22 @@ fun Profile(onBack: () -> Unit = {}) {
                 ProfileField(label = "Name", value = name)
             }
 
-            DateField(
-                date = dateOfBirth,
-                onDateChange = { dateOfBirth = it },
-                label = "Age",
-                isError = false,
-                isEditable = isEditMode,
-                displayValue = calculateAgeFromDateOfBirth(dateOfBirth)?.toString(),
-                allowDatesAfterToday = false,
-            )
+            if (isEditMode) {
+                DateField(
+                    date = dateOfBirth,
+                    onDateChange = { dateOfBirth = it },
+                    label = "Date of Birth",
+                    isError = false,
+                    isEditable = true,
+                    displayValue = dateOfBirth,
+                    allowDatesAfterToday = false
+                )
+            } else {
+                ProfileField(
+                    label = "Date of Birth",
+                    value = dateOfBirth
+                )
+            }
 
             if (isEditMode) {
                 FormTextField(
@@ -422,37 +374,12 @@ fun Profile(onBack: () -> Unit = {}) {
                         .fillMaxWidth()
                         .padding(top = 16.dp, bottom = 8.dp)
                 )
-                FormTextField(
-                    value = address,
-                    onValueChange = { address = it },
-                    label = "Address",
-                    isError = false
-                )
-                FormTextField(
-                    value = suburb,
-                    onValueChange = { suburb = it },
-                    label = "Suburb",
-                    isError = false
-                )
-                FormTextField(
-                    value = state,
-                    onValueChange = { state = it },
-                    label = "State",
-                    isError = false
-                )
-                FormTextField(
-                    value = postcode,
-                    onValueChange = { postcode = it },
-                    label = "Postcode",
-                    isError = false,
-                    keyboardType = KeyboardType.Number
-                )
-                FormTextField(
-                    value = country,
-                    onValueChange = { country = it },
-                    label = "Country",
-                    isError = false
-                )
+
+                FormTextField(value = address, onValueChange = { address = it }, label = "Address", isError = false)
+                FormTextField(value = suburb, onValueChange = { suburb = it }, label = "Suburb", isError = false)
+                FormTextField(value = state, onValueChange = { state = it }, label = "State", isError = false)
+                FormTextField(value = postcode, onValueChange = { postcode = it }, label = "Postcode", isError = false, keyboardType = KeyboardType.Number)
+                FormTextField(value = country, onValueChange = { country = it }, label = "Country", isError = false)
             } else {
                 val displayAddress = listOf(address, suburb)
                     .filter { it.isNotEmpty() }
@@ -495,7 +422,7 @@ fun Profile(onBack: () -> Unit = {}) {
                             ) {
                                 RadioButton(
                                     selected = gender == option,
-                                    onClick = null, // null because we're handling the click on the row
+                                    onClick = null,
                                     colors = RadioButtonDefaults.colors(
                                         selectedColor = FormColors.green,
                                         unselectedColor = FormColors.green
@@ -510,7 +437,6 @@ fun Profile(onBack: () -> Unit = {}) {
                         }
                     }
                 } else {
-                    // Non-editable display
                     Text(
                         text = gender,
                         fontSize = 16.sp,
@@ -519,7 +445,6 @@ fun Profile(onBack: () -> Unit = {}) {
                             .padding(bottom = 8.dp)
                     )
 
-                    // Divider
                     HorizontalDivider(
                         modifier = Modifier.fillMaxWidth(),
                         thickness = 1.dp,
@@ -528,7 +453,6 @@ fun Profile(onBack: () -> Unit = {}) {
                 }
             }
 
-            // Emergency Contact Section
             Text(
                 text = "Emergency Contact",
                 fontSize = 18.sp,
@@ -538,19 +462,12 @@ fun Profile(onBack: () -> Unit = {}) {
                     .padding(top = 24.dp, bottom = 16.dp)
             )
 
-            // Emergency Contact Name Field
             if (isEditMode) {
-                FormTextField(
-                    value = emergencyName,
-                    onValueChange = { emergencyName = it },
-                    label = "Name",
-                    isError = false
-                )
+                FormTextField(value = emergencyName, onValueChange = { emergencyName = it }, label = "Name", isError = false)
             } else {
                 ProfileField(label = "Name", value = emergencyName)
             }
 
-            // Emergency Contact Email Field
             if (isEditMode) {
                 FormTextField(
                     value = emergencyEmail,
@@ -566,7 +483,6 @@ fun Profile(onBack: () -> Unit = {}) {
                 ProfileField(label = "Email", value = emergencyEmail)
             }
 
-            // Emergency Contact Relation Field - Dropdown
             if (isEditMode) {
                 val relationOptions = listOf("Spouse", "Parent", "Other family", "Friend", "Other")
                 FormDropdown(
@@ -580,7 +496,6 @@ fun Profile(onBack: () -> Unit = {}) {
                 ProfileField(label = "Relation", value = emergencyRelation)
             }
 
-            // Emergency Contact Phone Number Field
             if (isEditMode) {
                 FormTextField(
                     value = emergencyPhoneNumber,
@@ -596,11 +511,9 @@ fun Profile(onBack: () -> Unit = {}) {
                 ProfileField(label = "Phone Number", value = emergencyPhoneNumber)
             }
 
-            // Add extra space at the bottom to ensure content is not hidden behind the buttons
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Fixed bottom surface with buttons and success message
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -608,10 +521,7 @@ fun Profile(onBack: () -> Unit = {}) {
             color = MaterialTheme.colorScheme.surface,
             shadowElevation = 8.dp
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Success message
+            Column(modifier = Modifier.fillMaxWidth()) {
                 SuccessMessage(
                     message = "Your details have been successfully saved",
                     isVisible = showSuccessMessage,
@@ -620,7 +530,6 @@ fun Profile(onBack: () -> Unit = {}) {
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
-                // Error message
                 errorMessage?.let { error ->
                     Card(
                         modifier = Modifier
@@ -649,14 +558,12 @@ fun Profile(onBack: () -> Unit = {}) {
                     }
                 }
 
-                // Buttons row
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Back button
                     OutlinedButton(
                         onClick = {
                             if (isEditMode) {
@@ -705,9 +612,6 @@ fun Profile(onBack: () -> Unit = {}) {
     }
 }
 
-/**
- * A non-editable profile field with label and value
- */
 @Composable
 fun ProfileField(label: String, value: String) {
     Column(
@@ -715,7 +619,6 @@ fun ProfileField(label: String, value: String) {
             .fillMaxWidth()
             .padding(bottom = 16.dp)
     ) {
-        // Label
         Text(
             text = label,
             fontSize = 14.sp,
@@ -723,7 +626,6 @@ fun ProfileField(label: String, value: String) {
             modifier = Modifier.padding(bottom = 4.dp)
         )
 
-        // Value
         Text(
             text = value,
             fontSize = 16.sp,
@@ -732,7 +634,6 @@ fun ProfileField(label: String, value: String) {
                 .padding(bottom = 8.dp)
         )
 
-        // Divider
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             thickness = 1.dp,

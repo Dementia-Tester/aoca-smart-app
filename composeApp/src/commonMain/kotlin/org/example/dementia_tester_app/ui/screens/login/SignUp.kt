@@ -514,7 +514,13 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
                     passwordsMatchError = true
                     errorMessage = "Passwords do not match"
                     showErrorMessage = true
-                } else {
+                }
+                else if (calculateAgeFromDateOfBirth(dateOfBirth) == null) {
+                    updateFieldError(DATE_OF_BIRTH, true)
+                    errorMessage = "Age cannot be 0. Please select a valid date of birth"
+                    showErrorMessage = true
+                }
+                else {
                     handleSignUp(email, password)
                 }
             },
