@@ -275,7 +275,13 @@ fun App() {
                         "Appointment History" -> AppointmentHistory()
                         "Contact" -> Contact()
                         "Chat" -> Chat()
-                        "Settings" -> Settings()
+                        "Settings" -> Settings(
+                            onAccountDeleted = {
+                                authService.signOut()
+                                userType = UserType.USER
+                                currentScreen = "Login"
+                            }
+                        )
                         "Help" -> Help()
                         "Profile" -> Profile(
                             onBack = {
