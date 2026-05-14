@@ -45,6 +45,8 @@ import org.example.dementia_tester_app.ui.components.FormToggle
  *  • Notification toggles that turn OFF also cancel local alarms via
  *    the existing NotificationManagerProvider / ReminderService infrastructure.
  */
+
+//this is a setting page
 @Composable
 fun Settings(onAccountDeleted: () -> Unit) {
     val scrollState      = rememberScrollState()
