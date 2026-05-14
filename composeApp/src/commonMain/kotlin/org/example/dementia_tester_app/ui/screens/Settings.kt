@@ -91,14 +91,14 @@ fun Settings(onAccountDeleted: () -> Unit) {
                         onValueChange = { save(settings.copy(textSize = it)) },
                         modifier = Modifier.weight(1f))
                 }
-                FormToggle("High Contrast Mode", settings.highContrastMode)
-                    { save(settings.copy(highContrastMode = it)) }
-                FormToggle("Screen Reader", settings.screenReader)
-                    { save(settings.copy(screenReader = it)) }
-                FormToggle("Reduce Motion", settings.reduceMotion)
-                    { save(settings.copy(reduceMotion = it)) }
-                FormToggle("Color Blind Mode", settings.colorBlindMode)
-                    { save(settings.copy(colorBlindMode = it)) }
+                FormToggle("High Contrast Mode", settings.highContrastMode,
+                    onCheckedChange = { save(settings.copy(highContrastMode = it)) })
+                FormToggle("Screen Reader", settings.screenReader,
+                    onCheckedChange = { save(settings.copy(screenReader = it)) })
+                FormToggle("Reduce Motion", settings.reduceMotion,
+                    onCheckedChange = { save(settings.copy(reduceMotion = it)) })
+                FormToggle("Color Blind Mode", settings.colorBlindMode,
+                    onCheckedChange = { save(settings.copy(colorBlindMode = it)) })
             }
         })
 
@@ -109,16 +109,16 @@ fun Settings(onAccountDeleted: () -> Unit) {
                     modifier = Modifier.padding(bottom = 16.dp))
                 // Note: turning a reminder OFF also cancels any scheduled local alarm
                 // via the ReminderService — that integration point is preserved here.
-                FormToggle("Appointment Reminders", settings.appointmentReminders)
-                    { save(settings.copy(appointmentReminders = it)) }
-                FormToggle("Medication Reminders", settings.medicationReminders)
-                    { save(settings.copy(medicationReminders = it)) }
-                FormToggle("Test Reminders", settings.testReminders)
-                    { save(settings.copy(testReminders = it)) }
-                FormToggle("App Updates", settings.appUpdates)
-                    { save(settings.copy(appUpdates = it)) }
-                FormToggle("Email Notifications", settings.emailNotifications)
-                    { save(settings.copy(emailNotifications = it)) }
+                FormToggle("Appointment Reminders", settings.appointmentReminders,
+                    onCheckedChange = { save(settings.copy(appointmentReminders = it)) })
+                FormToggle("Medication Reminders", settings.medicationReminders,
+                    onCheckedChange = { save(settings.copy(medicationReminders = it)) })
+                FormToggle("Test Reminders", settings.testReminders,
+                    onCheckedChange = { save(settings.copy(testReminders = it)) })
+                FormToggle("App Updates", settings.appUpdates,
+                    onCheckedChange = { save(settings.copy(appUpdates = it)) })
+                FormToggle("Email Notifications", settings.emailNotifications,
+                    onCheckedChange = { save(settings.copy(emailNotifications = it)) })
             }
         })
 
@@ -127,10 +127,10 @@ fun Settings(onAccountDeleted: () -> Unit) {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 Text("Account Settings", fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp))
-                FormToggle("Data Sharing", settings.dataSharing)
-                    { save(settings.copy(dataSharing = it)) }
-                FormToggle("Sync with Cloud", settings.syncWithCloud)
-                    { save(settings.copy(syncWithCloud = it)) }
+                FormToggle("Data Sharing", settings.dataSharing,
+                    onCheckedChange = { save(settings.copy(dataSharing = it)) })
+                FormToggle("Sync with Cloud", settings.syncWithCloud,
+                    onCheckedChange = { save(settings.copy(syncWithCloud = it)) })
                 Button(onClick = { showChangePasswordDialog = true },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     Text("Change Password")

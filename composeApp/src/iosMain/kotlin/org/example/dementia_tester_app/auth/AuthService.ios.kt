@@ -12,8 +12,7 @@ private const val WRONG_PASSWORD = 17009L
 private const val USER_NOT_FOUND = 17011L
 private const val WEAK_PASSWORD = 17026L
 
-
-actual class AuthService {
+actual class AuthService actual constructor() {
     /**
      * Sign in with email and password
      */
@@ -30,7 +29,6 @@ actual class AuthService {
                 return@signInWithEmail
             }
 
-            // Only interpret codes from Firebase Auth domain
             val message = if (error.domain == "FIRAuthErrorDomain") {
                 when (error.code.toLong()) {
                     INVALID_EMAIL   -> "Invalid email."
@@ -48,10 +46,6 @@ actual class AuthService {
         }
     }
 
-
-    /**
-     * Sign up with email and password
-     */
     actual fun signUp(email: String, password: String, callback: (AuthResult) -> Unit) {
         val auth = FIRAuth.auth()
         if (auth == null) {
@@ -66,16 +60,13 @@ actual class AuthService {
                     WEAK_PASSWORD -> "Password is too weak."
                     INVALID_EMAIL -> "Invalid email format."
                     EMAIL_IN_USE -> "User with this email already exists."
-                    else -> "Registration failed: ${'$'}{error.localizedDescription}"
+                    else -> "Registration failed: ${error.localizedDescription}"
                 }
                 callback(AuthResult.Error(message))
             }
         }
     }
 
-    /**
-     * Send password reset email
-     */
     actual fun sendPasswordResetEmail(email: String, callback: (AuthResult) -> Unit) {
         val auth = FIRAuth.auth()
         if (auth == null) {
@@ -89,16 +80,13 @@ actual class AuthService {
                 val message = if (error.code == USER_NOT_FOUND) {
                     "No user found with this email."
                 } else {
-                    "Failed to send password reset email: ${'$'}{error.localizedDescription}"
+                    "Failed to send password reset email: ${error.localizedDescription}"
                 }
                 callback(AuthResult.Error(message))
             }
         }
     }
 
-    /**
-     * Send email verification to the current user
-     */
     actual fun sendEmailVerification(callback: (AuthResult) -> Unit) {
         val user = FIRAuth.auth()?.currentUser()
         if (user == null) {
@@ -109,21 +97,15 @@ actual class AuthService {
             if (error == null) {
                 callback(AuthResult.Success)
             } else {
-                callback(AuthResult.Error("Failed to send verification email: ${'$'}{error.localizedDescription}"))
+                callback(AuthResult.Error("Failed to send verification email: ${error.localizedDescription}"))
             }
         }
     }
 
-    /**
-     * Check if the current user's email is verified
-     */
     actual fun isEmailVerified(): Boolean {
         return FIRAuth.auth()?.currentUser()?.isEmailVerified() ?: false
     }
 
-    /**
-     * Reload the current user's data to get the latest status
-     */
     actual fun reloadUser(callback: (AuthResult) -> Unit) {
         val user = FIRAuth.auth()?.currentUser()
         if (user == null) {
@@ -134,14 +116,11 @@ actual class AuthService {
             if (error == null) {
                 callback(AuthResult.Success)
             } else {
-                callback(AuthResult.Error("Failed to reload user: ${'$'}{error.localizedDescription}"))
+                callback(AuthResult.Error("Failed to reload user: ${error.localizedDescription}"))
             }
         }
     }
 
-    /**
-     * Sign out the current user
-     */
     @OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
     actual fun signOut() {
         val auth = FIRAuth.auth() ?: return
@@ -151,17 +130,41 @@ actual class AuthService {
         }
     }
 
-    /**
-     * Check if a user is currently signed in
-     */
     actual fun isUserSignedIn(): Boolean {
         return FIRAuth.auth()?.currentUser() != null
     }
 
-    /**
-     * Get the current user's ID
-     */
     actual fun getCurrentUserId(): String? {
         return FIRAuth.auth()?.currentUser()?.uid()
+    }
+
+    actual fun changePassword(newPassword: String, callback: (AuthResult) -> Unit) {
+        val user = FIRAuth.auth()?.currentUser()
+        if (user == null) {
+            callback(AuthResult.Error("No user is currently signed in"))
+            return
+        }
+        user.updatePassword(newPassword) { error: NSError? ->
+            if (error == null) {
+                callback(AuthResult.Success)
+            } else {
+                callback(AuthResult.Error("Failed to change password: ${error.localizedDescription}"))
+            }
+        }
+    }
+
+    actual fun deleteAccount(callback: (AuthResult) -> Unit) {
+        val user = FIRAuth.auth()?.currentUser()
+        if (user == null) {
+            callback(AuthResult.Error("No user is currently signed in"))
+            return
+        }
+        user.deleteWithCompletion { error: NSError? ->
+            if (error == null) {
+                callback(AuthResult.Success)
+            } else {
+                callback(AuthResult.Error("Failed to delete account: ${error.localizedDescription}"))
+            }
+        }
     }
 }
