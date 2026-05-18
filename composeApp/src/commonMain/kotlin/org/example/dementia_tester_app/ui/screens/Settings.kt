@@ -55,6 +55,7 @@ fun Settings(onAccountDeleted: () -> Unit) {
 
     // ── Single consolidated state object (replaces 12 separate vars) ──
     var settings by remember { mutableStateOf(UserSettings()) }
+    var expandedSection by remember { mutableStateOf<String?>(null) }
 
     // ── Load from Firebase once on screen open ─────────────────────
     LaunchedEffect(Unit) {
@@ -79,7 +80,13 @@ fun Settings(onAccountDeleted: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
 
         // ── Accessibility ──────────────────────────────────────────
-        CollapsibleSection(title = "Accessibility", content = {
+        CollapsibleSection(
+            title = "Accessibility",
+            isExpanded = expandedSection == "Accessibility",
+            onHeaderClick = {
+                expandedSection = if (expandedSection == "Accessibility") null else "Accessibility"
+            },
+            content = {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 Text("Accessibility Options", fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp))
@@ -102,10 +109,17 @@ fun Settings(onAccountDeleted: () -> Unit) {
                 FormToggle("Color Blind Mode", settings.colorBlindMode,
                     onCheckedChange = { save(settings.copy(colorBlindMode = it)) })
             }
-        })
+        }
+        )
 
         // ── Notifications ──────────────────────────────────────────
-        CollapsibleSection(title = "Notifications", content = {
+        CollapsibleSection(
+            title = "Notifications",
+            isExpanded = expandedSection == "Notifications",
+            onHeaderClick = {
+                expandedSection = if (expandedSection == "Notifications") null else "Notifications"
+            },
+            content = {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 Text("Notification Preferences", fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp))
@@ -122,10 +136,17 @@ fun Settings(onAccountDeleted: () -> Unit) {
                 FormToggle("Email Notifications", settings.emailNotifications,
                     onCheckedChange = { save(settings.copy(emailNotifications = it)) })
             }
-        })
+        }
+        )
 
         // ── Account ────────────────────────────────────────────────
-        CollapsibleSection(title = "Account", content = {
+        CollapsibleSection(
+            title = "Account",
+            isExpanded = expandedSection == "Account",
+            onHeaderClick = {
+                expandedSection = if (expandedSection == "Account") null else "Account"
+            },
+            content = {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 Text("Account Settings", fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp))
@@ -146,7 +167,8 @@ fun Settings(onAccountDeleted: () -> Unit) {
                         modifier = Modifier.padding(top = 8.dp))
                 }
             }
-        })
+        }
+        )
 
         Spacer(Modifier.height(16.dp))
     }

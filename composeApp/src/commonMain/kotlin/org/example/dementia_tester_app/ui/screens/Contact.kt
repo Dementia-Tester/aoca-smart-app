@@ -29,8 +29,9 @@ fun Contact() {
         // App Support Section
         CollapsibleSection(
             title = "App",
+            isExpanded = true,
+            onHeaderClick = {},
             content = {
-                Column {
                     Text(
                         text = "App Support",
                         fontWeight = FontWeight.Bold,
@@ -40,14 +41,16 @@ fun Contact() {
                     Text("Phone: +61 2 1234 5678")
                     Text("Hours: Monday to Friday, 9am - 5pm AEST")
                     Text("For technical issues, feature requests, or general app inquiries")
-                }
+
             }
         )
         
         // Emergency Section
-        CollapsibleSection(
-            title = "Emergency",
-            content = {
+    CollapsibleSection(
+        title = "Emergency",
+        isExpanded = true,
+        onHeaderClick = {},
+        content = {
                 Column {
                     Text(
                         text = "Emergency Contacts",
@@ -63,9 +66,11 @@ fun Contact() {
         )
         
         // Carer Section
-        CollapsibleSection(
-            title = "Carer",
-            content = {
+    CollapsibleSection(
+        title = "Carer",
+        isExpanded = true,
+        onHeaderClick = {},
+        content = {
                 Column {
                     Text(
                         text = "Carer Support",
@@ -81,9 +86,11 @@ fun Contact() {
         )
         
         // Doctor Section
-        CollapsibleSection(
-            title = "Doctor",
-            content = {
+    CollapsibleSection(
+        title = "Doctor",
+        isExpanded = true,
+        onHeaderClick = {},
+        content = {
                 Column {
                     Text(
                         text = "Medical Support",
