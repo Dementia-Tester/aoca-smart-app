@@ -56,26 +56,42 @@ fun Settings(onAccountDeleted: () -> Unit) {
     // ── Single consolidated state object (replaces 12 separate vars) ──
     var settings by remember { mutableStateOf(UserSettings()) }
     var expandedSection by remember { mutableStateOf<String?>(null) }
+    var accountMessage           by remember { mutableStateOf<String?>(null) }
 
     // ── Load from Firebase once on screen open ─────────────────────
     LaunchedEffect(Unit) {
         settingsService.loadSettings { result ->
-            if (result is DatabaseResult.Success) settings = result.data
+            when (result) {
+                is DatabaseResult.Success -> {
+                    settings = result.data
+                    accountMessage = "Settings loaded successfully."
+                }
+
+                is DatabaseResult.Error -> {
+                    accountMessage = result.message
+                }
+            }
         }
     }
-
-    // Helper: save updated settings and update local state atomically
-    fun save(updated: UserSettings) {
-        settings = updated
-        settingsService.saveSettings(updated) { /* fire-and-forget; errors silently ignored */ }
-    }
-
-    // ── Dialog / password state ────────────────────────────────────
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog  by remember { mutableStateOf(false) }
     var newPassword              by remember { mutableStateOf("") }
     var confirmPassword          by remember { mutableStateOf("") }
-    var accountMessage           by remember { mutableStateOf<String?>(null) }
+
+
+    // Helper: save updated settings and update local state atomically
+    fun save(updated: UserSettings) {
+        settings = updated
+        settingsService.saveSettings(updated) { result ->
+            accountMessage = when (result) {
+                is DatabaseResult.Success -> "Settings saved successfully."
+                is DatabaseResult.Error -> result.message
+            }
+        }
+    }
+
+    // ── Dialog / password state ────────────────────────────────────
+
 
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
 
@@ -169,6 +185,13 @@ fun Settings(onAccountDeleted: () -> Unit) {
             }
         }
         )
+        accountMessage?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
 
         Spacer(Modifier.height(16.dp))
     }
