@@ -130,8 +130,8 @@ fun Help() {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    Text("Technical Support: support@dementia-tester.com")
-                    Text("Phone: +61 2 1234 5678")
+                    Text("Technical Support: dementiatester@gmail.com")
+                    Text("Phone: 0402743250")
                     Text("Hours: Monday to Friday, 9am - 5pm AEST")
                     Text("Address: 123 Health Street, Sydney NSW 2000")
                     Text("Website: www.dementia-tester.com")
