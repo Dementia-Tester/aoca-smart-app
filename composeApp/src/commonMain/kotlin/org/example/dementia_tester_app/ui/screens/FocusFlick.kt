@@ -1,5 +1,7 @@
 package org.example.dementia_tester_app.ui.screens
 
+import org.example.dementia_tester_app.data.Activity
+import org.example.dementia_tester_app.data.ActivityService
 import org.example.dementia_tester_app.data.MiniGameScoresService
 import org.example.dementia_tester_app.data.UserProfileService
 import org.example.dementia_tester_app.data.GameType
@@ -45,8 +47,18 @@ fun FocusFlick(onReturn: () -> Unit) {
 
     fun submit() {
         val s = MiniGameScoresService()
+        val activityService = ActivityService()
         val userId = authService.getCurrentUserId()
-        userId?.let { s.addUserGameAttempt(it, GameType.COMPLEX_ATTENTION, score, {}) }
+        userId?.let { uid ->
+            s.addUserGameAttempt(uid, GameType.COMPLEX_ATTENTION, score, {})
+            activityService.logActivity(
+                Activity(
+                    title = "Game Played: Focus Flick",
+                    type = "game",
+                    description = "Scored $score in Complex Attention"
+                )
+            ) { /* Ignore result */ }
+        }
     }
 
     fun submitOnce() {

@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.example.dementia_tester_app.data.Activity
+import org.example.dementia_tester_app.data.ActivityService
 import org.example.dementia_tester_app.data.Appointment
 import org.example.dementia_tester_app.data.AppointmentService
 import org.example.dementia_tester_app.data.AppointmentStatus
@@ -100,9 +102,22 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
         "Dr. Emily Rodriguez", "Dr. David Kim", "Dr. Jessica Patel"
     )
     val appointmentService = remember { AppointmentService() }
+    val activityService = remember { ActivityService() }
+    val userProfileService = remember { org.example.dementia_tester_app.data.UserProfileService() }
 
     val today         = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val todayFormatted = "${today.dayOfMonth}/${today.monthNumber}/${today.year}"
+
+    var currentUserProfile by remember { mutableStateOf<org.example.dementia_tester_app.data.UserProfile?>(null) }
+    
+    // Load profile on start to get name and email for the email notification
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        userProfileService.getCurrentUserProfile { result ->
+            if (result is DatabaseResult.Success) {
+                currentUserProfile = result.data
+            }
+        }
+    }
 
     var selectedDoctor          by remember { mutableStateOf("") }
     var selectedAppointmentType by remember { mutableStateOf("") }
@@ -254,9 +269,16 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
 
                     isSubmitting = true
                     val appt = Appointment(
-                        doctor = selectedDoctor, type = selectedAppointmentType,
-                        date   = selectedDate,   time = selectedTime,
-                        reason = reasonForAppointment, status = AppointmentStatus.Upcoming)
+                        doctor = selectedDoctor,
+                        type = selectedAppointmentType,
+                        date   = selectedDate,
+                        time = selectedTime,
+                        reason = reasonForAppointment,
+                        status = AppointmentStatus.Upcoming,
+                        patientName = currentUserProfile?.name ?: "Patient",
+                        patientEmail = currentUserProfile?.email ?: "",
+                        doctorEmail = "pratik.poudel77@gmail.com" // Default admin/doctor email for notifications
+                    )
 
                     appointmentService.createAppointment(appt) { result ->
                         isSubmitting = false
@@ -264,6 +286,16 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
                             is DatabaseResult.Success -> {
                                 successMessage = "Appointment booked successfully!"
                                 showSuccessMessage = true; showErrorMessage = false
+                                
+                                // Log activity
+                                activityService.logActivity(
+                                    Activity(
+                                        title = "Appointment Booked",
+                                        type = "appointment",
+                                        description = "With ${appt.doctor} on ${appt.date}"
+                                    )
+                                ) { /* Ignore result */ }
+
                                 // Reset form
                                 selectedDoctor = ""; selectedAppointmentType = ""
                                 selectedDate   = todayFormatted; selectedTime = ""

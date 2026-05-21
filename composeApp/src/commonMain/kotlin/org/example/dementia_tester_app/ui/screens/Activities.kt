@@ -1,37 +1,251 @@
 package org.example.dementia_tester_app.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import org.example.dementia_tester_app.data.Activity
+import org.example.dementia_tester_app.data.ActivityService
+import org.example.dementia_tester_app.data.DatabaseResult
 
 /**
  * Activities screen
  */
 @Composable
 fun Activities() {
+    val activityService = remember { ActivityService() }
+    val activities by activityService.getActivitiesFlow().collectAsState(initial = null)
+    var todaySummary by remember { mutableStateOf<Map<String, Int>?>(null) }
+    var isLoadingSummary by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        activityService.getTodaySummary { result ->
+            if (result is DatabaseResult.Success) {
+                todaySummary = result.data
+            }
+            isLoadingSummary = false
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Daily Activities",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        // Summary Section
+        DailySummarySection(todaySummary, isLoadingSummary)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Recent Activity",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        // Activities List
+        when {
+            activities == null -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            activities!!.isEmpty() -> {
+                EmptyState()
+            }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    items(activities!!) { activity ->
+                        ActivityItem(activity)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DailySummarySection(summary: Map<String, Int>?, isLoading: Boolean) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Today's Summary",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            if (isLoading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    SummaryItem("Total", summary?.get("total") ?: 0, Icons.Default.Assessment)
+                    SummaryItem("Tasks", summary?.get("reminder") ?: 0, Icons.Default.CheckCircle)
+                    SummaryItem("Tests", summary?.get("test") ?: 0, Icons.Default.FactCheck)
+                    SummaryItem("Games", summary?.get("game") ?: 0, Icons.Default.Games)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SummaryItem(label: String, count: Int, icon: ImageVector) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(24.dp)
+        )
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+fun ActivityItem(activity: Activity) {
+    val icon = when (activity.type) {
+        "game" -> Icons.Default.Games
+        "test" -> Icons.Default.FactCheck
+        "reminder" -> Icons.Default.Notifications
+        "appointment" -> Icons.Default.Event
+        else -> Icons.Default.History
+    }
+
+    val iconColor = when (activity.type) {
+        "game" -> Color(0xFF4CAF50)
+        "test" -> Color(0xFF2196F3)
+        "reminder" -> Color(0xFFFF9800)
+        "appointment" -> Color(0xFFE91E63)
+        else -> MaterialTheme.colorScheme.primary
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(iconColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = activity.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                if (activity.description.isNotEmpty()) {
+                    Text(
+                        text = activity.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    text = formatTimestamp(activity.timestamp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyState() {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Icon(
+            imageVector = Icons.Default.History,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Activities feature coming soon",
+            text = "No activities yet",
             style = MaterialTheme.typography.titleMedium,
-            color = Color.Black.copy(alpha = 0.7f),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = "Your recent activities will appear here",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             textAlign = TextAlign.Center
         )
     }
+}
+
+fun formatTimestamp(timestamp: Instant): String {
+    val dateTime = timestamp.toLocalDateTime(TimeZone.currentSystemDefault())
+    return "${dateTime.dayOfMonth}/${dateTime.monthNumber}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padStart(2, '0')}"
 }

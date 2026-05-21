@@ -30,7 +30,7 @@ function getPatientEmailTemplate(appointment) {
   return `
     <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
       <h2 style="color: #4CAF50;">Appointment Confirmation</h2>
-      <p>Hello <strong>${appointment.patientName}</strong>,</p>
+      <p>Hello <strong>${appointment.patientName || "Patient"}</strong>,</p>
       <p>Your appointment has been successfully booked. Here are the details:</p>
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
@@ -39,11 +39,11 @@ function getPatientEmailTemplate(appointment) {
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Doctor:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.doctorName}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.doctor}</td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Date & Time:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.dateTime}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.date} at ${appointment.time}</td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Type:</strong></td>
@@ -67,23 +67,23 @@ function getAdminEmailTemplate(appointment) {
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Patient Name:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.patientName}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.patientName || "Unknown"}</td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Patient Email:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.patientEmail}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.patientEmail || "Not provided"}</td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Doctor assigned:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.doctorName}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.doctor}</td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Date & Time:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.dateTime}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.date} at ${appointment.time}</td>
         </tr>
          <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Reason/Comments:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.comments || "No comments provided"}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.reason || "No comments provided"}</td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Booked At:</strong></td>

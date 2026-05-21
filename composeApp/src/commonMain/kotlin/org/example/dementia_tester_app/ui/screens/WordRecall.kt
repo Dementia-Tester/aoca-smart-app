@@ -1,6 +1,8 @@
 package org.example.dementia_tester_app.ui.screens
 
 import androidx.compose.foundation.background
+import org.example.dementia_tester_app.data.Activity
+import org.example.dementia_tester_app.data.ActivityService
 import org.example.dementia_tester_app.data.MiniGameScoresService
 import org.example.dementia_tester_app.data.GameType
 import androidx.compose.foundation.layout.*
@@ -93,8 +95,18 @@ fun WordRecall(onReturn: () -> Unit){
     // Submit score
     fun submit() {
         val s = MiniGameScoresService()
+        val activityService = ActivityService()
         val userId = authService.getCurrentUserId()
-        userId?.let { s.addUserGameAttempt(it, GameType.LEARNING_AND_MEMORY, score, {}) }
+        userId?.let { uid ->
+            s.addUserGameAttempt(uid, GameType.LEARNING_AND_MEMORY, score, {})
+            activityService.logActivity(
+                Activity(
+                    title = "Game Played: Word Recall",
+                    type = "game",
+                    description = "Scored $score in Learning and Memory"
+                )
+            ) { /* Ignore result */ }
+        }
     }
 
     fun submitOnce() {

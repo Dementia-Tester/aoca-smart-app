@@ -17,6 +17,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.runtime.rememberUpdatedState
 import org.example.dementia_tester_app.auth.AuthService
+import org.example.dementia_tester_app.data.Activity
+import org.example.dementia_tester_app.data.ActivityService
 import org.example.dementia_tester_app.data.AttemptSummary
 import org.example.dementia_tester_app.data.DatabaseResult
 import org.example.dementia_tester_app.data.UserQuizService
@@ -134,6 +136,7 @@ fun HealthSurvey(
     onBackToDashboard: () -> Unit = {}
 ) {
     val healthSurveyService = remember { UserQuizService(UserQuizType.HealthSurvey) }
+    val activityService = remember { ActivityService() }
     val authService = remember { AuthService() }
     val notificationManager = remember { NotificationManagerProvider.getNotificationManager() }
     val reminderScheduler = remember { LocalNotificationManagerAdapter(notificationManager) }
@@ -554,6 +557,16 @@ fun HealthSurvey(
                             println("HealthSurvey: Failed to cancel notification")
                         }
                         finalizeCurrentAttempt()
+
+                        // Log activity
+                        activityService.logActivity(
+                            Activity(
+                                title = "Health Survey Completed",
+                                type = "test",
+                                description = "Completed attempt #$attemptNumber"
+                            )
+                        ) { /* Ignore result */ }
+
                         currentQuestionIndex = 0
                         showSummary = false
 

@@ -33,6 +33,8 @@ import org.example.dementia_tester_app.ui.components.AttemptsListScreen
 import org.example.dementia_tester_app.ui.components.LoadingSpinner
 import org.example.dementia_tester_app.ui.components.QuestionComponent
 import org.example.dementia_tester_app.ui.components.QuizSummary
+import org.example.dementia_tester_app.data.Activity
+import org.example.dementia_tester_app.data.ActivityService
 import org.example.dementia_tester_app.data.Question
 import org.example.dementia_tester_app.ui.components.FormColors
 
@@ -296,6 +298,7 @@ fun TestView() {
     // Cognitive question authorisation services:
     val authService: AuthService = remember { AuthService() }
     val userQuizService = remember { UserQuizService(CognitiveAssessment) }
+    val activityService = remember { ActivityService() }
     val userId = authService.getCurrentUserId()
 
     // Local state to control which view is shown within TestView page:
@@ -394,6 +397,16 @@ fun TestView() {
                                         inProgressAttemptNumber = null
                                         currentAttemptNumber = res.data // next attempt number
                                         showQuestionsPage = false
+
+                                        // Log activity
+                                        activityService.logActivity(
+                                            Activity(
+                                                title = "Cognitive Assessment Completed",
+                                                type = "test",
+                                                description = "Completed attempt #$attemptToLoad"
+                                            )
+                                        ) { /* Ignore result */ }
+
                                         // Load the completed attempt's details to show in summary:
                                         userQuizService.getAttemptDetails(userId, attemptToLoad) { det ->
                                             when (det) {

@@ -1,6 +1,8 @@
 package org.example.dementia_tester_app.ui.screens
 
 import androidx.compose.foundation.Canvas
+import org.example.dementia_tester_app.data.Activity
+import org.example.dementia_tester_app.data.ActivityService
 import org.example.dementia_tester_app.data.MiniGameScoresService
 import org.example.dementia_tester_app.data.GameType
 import androidx.compose.foundation.layout.*
@@ -108,8 +110,18 @@ fun TaskSwitch(onReturn: () -> Unit){
 
     fun submit(){
         val s = MiniGameScoresService()
+        val activityService = ActivityService()
         val userId = authService.getCurrentUserId()
-        userId?.let { s.addUserGameAttempt(it, GameType.EXECUTIVE_FUNCTION, score, {}) }
+        userId?.let { uid ->
+            s.addUserGameAttempt(uid, GameType.EXECUTIVE_FUNCTION, score, {})
+            activityService.logActivity(
+                Activity(
+                    title = "Game Played: Task Switch",
+                    type = "game",
+                    description = "Scored $score in Executive Function"
+                )
+            ) { /* Ignore result */ }
+        }
     }
 
     fun submitOnce() {

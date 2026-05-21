@@ -15,6 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.example.dementia_tester_app.data.Activity
+import org.example.dementia_tester_app.data.ActivityService
 import org.example.dementia_tester_app.data.Reminder
 
 /**
@@ -37,6 +40,8 @@ fun ReminderCard(
     onToggle: (String, Boolean) -> Unit,
     onDelete: (String) -> Unit
 ) {
+    val activityService = remember { ActivityService() }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -62,7 +67,18 @@ fun ReminderCard(
                 Switch(
                     modifier = Modifier.padding(12.dp),
                     checked = reminder.taskActive,
-                    onCheckedChange = { onToggle(reminder.id!!, !reminder.taskActive) }
+                    onCheckedChange = { newValue -> 
+                        onToggle(reminder.id!!, newValue)
+                        if (newValue) {
+                            activityService.logActivity(
+                                Activity(
+                                    title = "Reminder Completed",
+                                    type = "reminder",
+                                    description = reminder.taskName ?: ""
+                                )
+                            ) { /* Ignore result */ }
+                        }
+                    }
                 )
                 Icon(
                     imageVector = Icons.Filled.Delete,
