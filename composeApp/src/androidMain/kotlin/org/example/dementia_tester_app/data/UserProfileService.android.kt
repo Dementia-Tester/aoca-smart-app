@@ -63,17 +63,27 @@ actual class UserProfileService {
             return
         }
 
-        val profileData = userProfile.toMap()
-        
-        // Update the user profile
-        database.child(dbPath).child(userId)
-            .updateChildren(profileData)
-            .addOnSuccessListener {
-                callback(DatabaseResult.Success(Unit))
+        // FETCH existing profile first to preserve sensitive fields (role/email)
+        database.child(dbPath).child(userId).get().addOnSuccessListener { snapshot ->
+            val currentData = snapshot.value as? Map<String, Any>
+            val updates = userProfile.toMap().toMutableMap()
+            
+            // FORCE keep the original role and email from the server to prevent escalation
+            if (currentData != null) {
+                updates["userType"] = currentData["userType"] ?: "user"
+                updates["email"] = currentData["email"] ?: ""
             }
-            .addOnFailureListener { e ->
-                callback(DatabaseResult.Error("Failed to update user profile: ${e.message}"))
-            }
+            
+            database.child(dbPath).child(userId).updateChildren(updates)
+                .addOnSuccessListener {
+                    callback(DatabaseResult.Success(Unit))
+                }
+                .addOnFailureListener { e ->
+                    callback(DatabaseResult.Error("Failed to update user profile: ${e.message}"))
+                }
+        }.addOnFailureListener { e ->
+            callback(DatabaseResult.Error("Security Check Failed: ${e.message}"))
+        }
     }
 
     /**

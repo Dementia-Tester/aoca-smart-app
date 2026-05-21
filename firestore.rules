@@ -1,0 +1,119 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── HELPER FUNCTIONS ──────────────────────────────────────────
+
+    // Check if the user is logged in
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the user is accessing their own data
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check for Admin role via Custom Claims
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    // Check for Doctor role via Custom Claims
+    function isDoctor() {
+      return isAuthenticated() && (request.auth.token.role == 'doctor' || isAdmin());
+    }
+
+    // Check if a field is being modified
+    function isUnchanged(key) {
+      return !(key in request.resource.data) || request.resource.data[key] == resource.data[key];
+    }
+
+    // ─── DEFAULT DENY ──────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ─── USERS COLLECTION ──────────────────────────────────────────
+    // Maps to 'UserProfiles' if migrated to Firestore, or kept for future use
+    match /users/{userId} {
+      // Users can read their own profile. Doctors/Admins can read any profile.
+      allow read: if isOwner(userId) || isDoctor();
+
+      // Users can only create their own document with default role
+      allow create: if isOwner(userId)
+        && request.resource.data.userType == 'user'
+        && request.resource.data.keys().hasAll(['email', 'userId']);
+
+      // Users can update their own profile, but cannot change sensitive fields
+      allow update: if isOwner(userId)
+        && isUnchanged('userType')
+        && isUnchanged('email')
+        && isUnchanged('userId');
+    }
+
+    // ─── DOCTORS COLLECTION ────────────────────────────────────────
+    match /doctors/{doctorId} {
+      // Authenticated users can read doctor profiles for discovery
+      allow read: if isAuthenticated();
+
+      // Only admins can create/update/delete doctor profiles
+      allow write: if isAdmin();
+    }
+
+    // ─── APPOINTMENTS COLLECTION ───────────────────────────────────
+    match /appointments/{appointmentId} {
+      // Only the patient or doctor involved can read appointment data
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId ||
+        request.auth.uid == resource.data.doctorId ||
+        isAdmin()
+      );
+
+      // Authenticated users can create appointments for themselves
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'Upcoming'
+        && request.resource.data.keys().hasAll(['userId', 'doctorId', 'appointmentDate', 'status']);
+
+      // Allow updates to status by the owner or doctor, but prevent hijacking
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId ||
+        request.auth.uid == resource.data.doctorId
+      ) && isUnchanged('userId') && isUnchanged('doctorId');
+    }
+
+    // ─── REVIEWS COLLECTION ────────────────────────────────────────
+    match /reviews/{reviewId} {
+      allow read: if true; // Reviews are public
+
+      // Only authenticated users can create reviews for themselves
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+
+      // Only the author can edit or delete their review
+      allow update, delete: if isOwner(resource.data.userId);
+    }
+
+    // ─── CHAT SYSTEM ───────────────────────────────────────────────
+    match /chatRooms/{roomId} {
+      // Only participants can see the room
+      allow read: if isAuthenticated() && request.auth.uid in resource.data.participants;
+
+      match /messages/{messageId} {
+        // Only participants can read messages
+        allow read: if isAuthenticated() && request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.participants;
+
+        // Only participants can send messages, and cannot edit/delete (immutable history)
+        allow create: if isAuthenticated()
+          && request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.participants
+          && request.resource.data.senderId == request.auth.uid;
+
+        allow update, delete: if false;
+      }
+    }
+  }
+}

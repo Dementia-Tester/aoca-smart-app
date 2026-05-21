@@ -76,13 +76,30 @@ actual class UserProfileService {
             return
         }
         
-        val profileData: Map<Any?, Any?> = userProfile.toMap().toObjcMap()
-        
-        ref.child(dbPath).child(userId).updateChildValues(profileData) { error: NSError?, _ ->
-            if (error == null) {
-                callback(DatabaseResult.Success(Unit))
-            } else {
-                callback(DatabaseResult.Error("Failed to update user profile: ${'$'}{error.localizedDescription}"))
+        // FETCH existing profile first to preserve sensitive fields (role/email)
+        ref.child(dbPath).child(userId).getDataWithCompletionBlock { error: NSError?, snapshot: FIRDataSnapshot? ->
+            if (error != null) {
+                callback(DatabaseResult.Error("Security Check Failed: ${'$'}{error.localizedDescription}"))
+                return@getDataWithCompletionBlock
+            }
+
+            val currentData = if (snapshot != null && snapshot.exists()) snapshotToMap(snapshot) as? Map<String, Any?> else null
+            val updates = userProfile.toMap().toMutableMap()
+            
+            // FORCE keep the original role and email from the server to prevent escalation
+            if (currentData != null) {
+                updates["userType"] = currentData["userType"] ?: "user"
+                updates["email"] = currentData["email"] ?: ""
+            }
+
+            val profileData: Map<Any?, Any?> = (updates as Map<String, Any?>).toObjcMap()
+            
+            ref.child(dbPath).child(userId).updateChildValues(profileData) { updateError: NSError?, _ ->
+                if (updateError == null) {
+                    callback(DatabaseResult.Success(Unit))
+                } else {
+                    callback(DatabaseResult.Error("Failed to update user profile: ${'$'}{updateError.localizedDescription}"))
+                }
             }
         }
     }
