@@ -19,31 +19,40 @@ data class Appointment(
     val date: String = "",
     val time: String = "",
     val status: AppointmentStatus = AppointmentStatus.Upcoming,
-    val reason: String = ""
+    val reason: String = "",
+    val patientName: String = "",
+    val patientEmail: String = "",
+    val doctorEmail: String = ""
 ) {
     fun toMap(): Map<String, Any> = mapOf(
-        "id"     to id,
-        "userId" to userId,
-        "doctor" to doctor,
-        "type"   to type,
-        "date"   to date,
-        "time"   to time,
-        "status" to status.name,
-        "reason" to reason
+        "id"           to id,
+        "userId"       to userId,
+        "doctor"       to doctor,
+        "type"         to type,
+        "date"         to date,
+        "time"         to time,
+        "status"       to status.name,
+        "reason"       to reason,
+        "patientName"  to patientName,
+        "patientEmail" to patientEmail,
+        "doctorEmail"  to doctorEmail
     )
 
     companion object {
         fun fromMap(map: Map<*, *>, id: String): Appointment {
             fun str(key: String) = (map[key] as? String) ?: ""
             return Appointment(
-                id     = id,
-                userId = str("userId"),
-                doctor = str("doctor"),
-                type   = str("type"),
-                date   = str("date"),
-                time   = str("time"),
-                status = AppointmentStatus.fromString(str("status")),
-                reason = str("reason")
+                id           = id,
+                userId       = str("userId"),
+                doctor       = str("doctor"),
+                type         = str("type"),
+                date         = str("date"),
+                time         = str("time"),
+                status       = AppointmentStatus.fromString(str("status")),
+                reason       = str("reason"),
+                patientName  = str("patientName"),
+                patientEmail = str("patientEmail"),
+                doctorEmail  = str("doctorEmail")
             )
         }
     }
