@@ -4,4 +4,6 @@ use_frameworks! :linkage => :static
 
 target 'iosApp' do
   pod 'ComposeApp', :path => '../composeApp'
+  pod 'FirebaseFirestore'
+  pod 'FirebaseStorage'
 end

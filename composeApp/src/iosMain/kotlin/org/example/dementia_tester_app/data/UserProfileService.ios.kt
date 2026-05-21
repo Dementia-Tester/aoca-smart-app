@@ -1,16 +1,14 @@
 package org.example.dementia_tester_app.data
 
 import cocoapods.FirebaseAuth.FIRAuth
-import cocoapods.FirebaseDatabase.FIRDatabase
-import cocoapods.FirebaseDatabase.FIRDataSnapshot
-import platform.Foundation.NSDictionary
-import platform.Foundation.NSError
-import platform.Foundation.NSNull
+import cocoapods.FirebaseFirestore.*
 import cocoapods.FirebaseStorage.*
 import platform.Foundation.*
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
+import kotlinx.cinterop.refTo
+import platform.darwin.NSObject
 
 private fun Map<String, Any?>.toObjcMap(): Map<Any?, Any?> =
     this.entries.associate { (k: String, v: Any?) ->
@@ -18,11 +16,10 @@ private fun Map<String, Any?>.toObjcMap(): Map<Any?, Any?> =
     }
 
 actual class UserProfileService {
-    private val dbPath = "UserProfiles"
+    private val collectionPath = "UserProfiles"
 
     /**
-     * Get the current user's profile
-     * @param callback Callback to be invoked with the result of the operation
+     * Get the current user's profile from Firestore
      */
     actual fun getCurrentUserProfile(callback: (DatabaseResult<UserProfile>) -> Unit) {
         val userId = FIRAuth.auth()?.currentUser()?.uid()
@@ -30,39 +27,35 @@ actual class UserProfileService {
             callback(DatabaseResult.Error("No user is signed in"))
             return
         }
-        val ref = FIRDatabase.database()?.reference()
-        if (ref == null) {
-            callback(DatabaseResult.Error("Firebase not initialized"))
-            return
-        }
-
-        ref.child(dbPath).child(userId).getDataWithCompletionBlock { error: NSError?, snapshot: FIRDataSnapshot? ->
+        
+        val db = FIRFirestore.firestore()
+        db.collectionWithPath(collectionPath).documentWithID(userId).getDocumentWithCompletion { snapshot, error ->
             if (error != null) {
-                callback(DatabaseResult.Error("Failed to get user profile: ${'$'}{error.localizedDescription}"))
-                return@getDataWithCompletionBlock
+                callback(DatabaseResult.Error("Failed to get user profile: ${error.localizedDescription}"))
+                return@getDocumentWithCompletion
             }
+            
             if (snapshot == null || !snapshot.exists()) {
                 callback(DatabaseResult.Error("Profile not found. Please create a profile."))
-                return@getDataWithCompletionBlock
+                return@getDocumentWithCompletion
             }
+            
             try {
-                val data = snapshotToMap(snapshot)
+                val data = snapshot.data() as? Map<String, Any?>
                 if (data != null) {
-                    val profile = UserProfile.fromMap(data, userId as String)
+                    val profile = UserProfile.fromMap(data, userId)
                     callback(DatabaseResult.Success(profile))
                 } else {
-                    callback(DatabaseResult.Error("Profile data is empty or in wrong format"))
+                    callback(DatabaseResult.Error("Profile data is empty"))
                 }
-            } catch (t: Throwable) {
-                callback(DatabaseResult.Error("Failed to parse user profile: ${'$'}{t.message}"))
+            } catch (e: Exception) {
+                callback(DatabaseResult.Error("Failed to parse user profile: ${e.message}"))
             }
         }
     }
-    
+
     /**
-     * Update the current user's profile
-     * @param userProfile The updated user profile
-     * @param callback Callback to be invoked with the result of the operation
+     * Update the current user's profile in Firestore
      */
     actual fun updateUserProfile(userProfile: UserProfile, callback: (DatabaseResult<Unit>) -> Unit) {
         val userId = FIRAuth.auth()?.currentUser()?.uid()
@@ -70,35 +63,30 @@ actual class UserProfileService {
             callback(DatabaseResult.Error("No user is signed in"))
             return
         }
-        val ref = FIRDatabase.database()?.reference()
-        if (ref == null) {
-            callback(DatabaseResult.Error("Firebase not initialized"))
-            return
-        }
+
+        val db = FIRFirestore.firestore()
+        val docRef = db.collectionWithPath(collectionPath).documentWithID(userId)
         
-        // FETCH existing profile first to preserve sensitive fields (role/email)
-        ref.child(dbPath).child(userId).getDataWithCompletionBlock { error: NSError?, snapshot: FIRDataSnapshot? ->
+        docRef.getDocumentWithCompletion { snapshot, error ->
             if (error != null) {
-                callback(DatabaseResult.Error("Security Check Failed: ${'$'}{error.localizedDescription}"))
-                return@getDataWithCompletionBlock
+                callback(DatabaseResult.Error("Security check failed: ${error.localizedDescription}"))
+                return@getDocumentWithCompletion
             }
-
-            val currentData = if (snapshot != null && snapshot.exists()) snapshotToMap(snapshot) as? Map<String, Any?> else null
+            
             val updates = userProfile.toMap().toMutableMap()
-            
-            // FORCE keep the original role and email from the server to prevent escalation
-            if (currentData != null) {
-                updates["userType"] = currentData["userType"] ?: "user"
-                updates["email"] = currentData["email"] ?: ""
+            if (snapshot != null && snapshot.exists()) {
+                val currentData = snapshot.data() as? Map<String, Any?>
+                if (currentData != null) {
+                    updates["userType"] = currentData["userType"] ?: "user"
+                    updates["email"] = currentData["email"] ?: ""
+                }
             }
-
-            val profileData: Map<Any?, Any?> = (updates as Map<String, Any?>).toObjcMap()
             
-            ref.child(dbPath).child(userId).updateChildValues(profileData) { updateError: NSError?, _ ->
-                if (updateError == null) {
-                    callback(DatabaseResult.Success(Unit))
+            docRef.setData(updates.toObjcMap(), true) { err ->
+                if (err != null) {
+                    callback(DatabaseResult.Error("Failed to update user profile: ${err.localizedDescription}"))
                 } else {
-                    callback(DatabaseResult.Error("Failed to update user profile: ${'$'}{updateError.localizedDescription}"))
+                    callback(DatabaseResult.Success(Unit))
                 }
             }
         }
@@ -106,130 +94,51 @@ actual class UserProfileService {
 
     /**
      * Get all users with userType = User
-     * @param callback Callback to be invoked with the result of the operation
      */
-    actual fun getAllUsers(callback: (DatabaseResult<List<UserProfile>>) -> Unit)  {
+    actual fun getAllUsers(callback: (DatabaseResult<List<UserProfile>>) -> Unit) {
         val userId = FIRAuth.auth()?.currentUser()?.uid()
         if (userId == null) {
             callback(DatabaseResult.Error("No user is signed in"))
             return
         }
-        val ref = FIRDatabase.database()?.reference()
-        if (ref == null) {
-            callback(DatabaseResult.Error("Firebase not initialized"))
-            return
-        }
-
-        // First check if the current user is a doctor
-        ref.child(dbPath).child(userId).getDataWithCompletionBlock { error: NSError?, snapshot: FIRDataSnapshot? ->
+        
+        val db = FIRFirestore.firestore()
+        db.collectionWithPath(collectionPath).documentWithID(userId).getDocumentWithCompletion { snapshot, error ->
             if (error != null) {
-                callback(DatabaseResult.Error("Failed to get user profile: ${'$'}{error.localizedDescription}"))
-                return@getDataWithCompletionBlock
+                callback(DatabaseResult.Error("Authorization check failed: ${error.localizedDescription}"))
+                return@getDocumentWithCompletion
             }
-            if (snapshot == null || !snapshot.exists()) {
-                callback(DatabaseResult.Error("Profile not found. Please create a profile."))
-                return@getDataWithCompletionBlock
+            
+            val userType = snapshot?.data()?.get("userType") as? String
+            if (userType != "doctor") {
+                callback(DatabaseResult.Error("Not authorized. Only doctors can access user data."))
+                return@getDocumentWithCompletion
             }
-
-            try {
-                val data = snapshotToMap(snapshot)
-                if (data == null) {
-                    callback(DatabaseResult.Error("Profile data is empty or in wrong format"))
-                    return@getDataWithCompletionBlock
-                }
-                val currentUserProfile = UserProfile.fromMap(data, userId)
-
-                if (currentUserProfile.userType != UserType.DOCTOR) {
-                    callback(DatabaseResult.Error("Not authorized. Only doctors can access user data."))
-                    return@getDataWithCompletionBlock
-                }
-
-                // If the user is a doctor, proceed to fetch all users
-                ref.child(dbPath).getDataWithCompletionBlock { err2: NSError?, snapAll: FIRDataSnapshot? ->
-                    if (err2 != null) {
-                        callback(DatabaseResult.Error("Failed to fetch users: ${'$'}{err2.localizedDescription}"))
-                        return@getDataWithCompletionBlock
+            
+            db.collectionWithPath(collectionPath)
+                .queryWhereField("userType", isEqualTo = "user")
+                .getDocumentsWithCompletion { querySnapshot, queryError ->
+                    if (queryError != null) {
+                        callback(DatabaseResult.Error("Failed to fetch users: ${queryError.localizedDescription}"))
+                        return@getDocumentsWithCompletion
                     }
-                    if (snapAll == null || !snapAll.exists()) {
-                        callback(DatabaseResult.Success(emptyList()))
-                        return@getDataWithCompletionBlock
-                    }
-
+                    
                     try {
-                        val value = snapAll.value
-                        val userProfiles = mutableListOf<UserProfile>()
-                        when (value) {
-                            is Map<*, *> -> {
-                                for ((k, v) in value) {
-                                    val uid = k?.toString() ?: continue
-                                    val userData = when (v) {
-                                        is Map<*, *> -> v
-                                        is NSDictionary -> nsDictionaryToKotlinMap(v)
-                                        else -> null
-                                    } ?: continue
-                                    val userProfile = UserProfile.fromMap(userData, uid)
-                                    if (userProfile.userType == UserType.USER) {
-                                        userProfiles.add(userProfile)
-                                    }
-                                }
-                            }
-                            is NSDictionary -> {
-                                val dict = value
-                                val keys = dict.allKeys as List<*>
-                                for (k in keys) {
-                                    val uid = k?.toString() ?: continue
-                                    val v = dict.objectForKey(k)
-                                    val userData = when (v) {
-                                        is Map<*, *> -> v
-                                        is NSDictionary -> nsDictionaryToKotlinMap(v)
-                                        else -> null
-                                    } ?: continue
-                                    val userProfile = UserProfile.fromMap(userData, uid)
-                                    if (userProfile.userType == UserType.USER) {
-                                        userProfiles.add(userProfile)
-                                    }
-                                }
-                            }
-                            else -> {
-                                // Unexpected type
-                            }
-                        }
-                        callback(DatabaseResult.Success(userProfiles))
-                    } catch (t: Throwable) {
-                        callback(DatabaseResult.Error("Failed to fetch users: ${'$'}{t.message}"))
+                        val profiles = querySnapshot?.documents?.mapNotNull { doc ->
+                            val docSnapshot = doc as FIRDocumentSnapshot
+                            val data = docSnapshot.data() as? Map<String, Any?>
+                            data?.let { UserProfile.fromMap(it, docSnapshot.documentID) }
+                        } ?: emptyList()
+                        callback(DatabaseResult.Success(profiles))
+                    } catch (e: Exception) {
+                        callback(DatabaseResult.Error("Failed to parse users: ${e.message}"))
                     }
                 }
-            } catch (t: Throwable) {
-                callback(DatabaseResult.Error("Failed to parse user profile: ${'$'}{t.message}"))
-            }
         }
-    }
-
-    private fun snapshotToMap(snapshot: FIRDataSnapshot): Map<*, *>? {
-        val value = snapshot.value
-        return when (value) {
-            is Map<*, *> -> value
-            is NSDictionary -> nsDictionaryToKotlinMap(value)
-            else -> null
-        }
-    }
-
-    private fun nsDictionaryToKotlinMap(dict: NSDictionary): Map<String, Any?> {
-        val result = mutableMapOf<String, Any?>()
-        val keys = dict.allKeys as List<*>
-        for (k in keys) {
-            val keyStr = k?.toString() ?: continue
-            val v = dict.objectForKey(k)
-            result[keyStr] = when (v) {
-                is NSDictionary -> nsDictionaryToKotlinMap(v)
-                else -> v
-            }
-        }
-        return result
     }
 
     /**
-     * Upload a profile image to Firebase Storage
+     * Upload a profile image to Firebase Storage and return the download URL
      */
     actual fun uploadProfileImage(imageBytes: ByteArray, callback: (DatabaseResult<String>) -> Unit) {
         val userId = FIRAuth.auth()?.currentUser()?.uid()
@@ -256,7 +165,19 @@ actual class UserProfileService {
                 if (downloadError != null) {
                     callback(DatabaseResult.Error("Failed to get download URL: ${downloadError.localizedDescription}"))
                 } else if (url != null) {
-                    callback(DatabaseResult.Success(url.absoluteString!!))
+                    val downloadUrl = url.absoluteString!!
+                    
+                    // Automatically update the Firestore document with the new URL
+                    val db = FIRFirestore.firestore()
+                    db.collectionWithPath(collectionPath).documentWithID(userId)
+                        .updateData(mapOf("profileImageUrl" to downloadUrl)) { updateError ->
+                            if (updateError != null) {
+                                // We still return success for the upload, but log or inform
+                                callback(DatabaseResult.Success(downloadUrl))
+                            } else {
+                                callback(DatabaseResult.Success(downloadUrl))
+                            }
+                        }
                 } else {
                     callback(DatabaseResult.Error("Download URL is null"))
                 }

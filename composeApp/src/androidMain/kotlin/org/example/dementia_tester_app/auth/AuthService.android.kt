@@ -20,8 +20,8 @@ actual class AuthService actual constructor() {
                 } else {
                     val errorMessage = when (task.exception) {
                         is FirebaseAuthInvalidUserException -> "Invalid credentials."
-                        is FirebaseAuthInvalidCredentialsException -> "Invalid credentials."
-                        else -> "Authentication failed: ${task.exception?.message ?: "Unknown error"}"
+                        is FirebaseAuthInvalidCredentialsException -> "Invalid email or password."
+                        else -> task.exception?.message ?: "Authentication failed"
                     }
                     callback(AuthResult.Error(errorMessage))
                 }
@@ -38,7 +38,7 @@ actual class AuthService actual constructor() {
                         is FirebaseAuthWeakPasswordException -> "Password is too weak."
                         is FirebaseAuthInvalidCredentialsException -> "Invalid email format."
                         is FirebaseAuthUserCollisionException -> "User with this email already exists."
-                        else -> "Registration failed: ${task.exception?.message ?: "Unknown error"}"
+                        else -> task.exception?.message ?: "Registration failed"
                     }
                     callback(AuthResult.Error(errorMessage))
                 }
@@ -108,6 +108,10 @@ actual class AuthService actual constructor() {
 
     actual fun getCurrentUserId(): String? {
         return auth.currentUser?.uid
+    }
+
+    actual fun getCurrentUserEmail(): String? {
+        return auth.currentUser?.email
     }
     actual fun changePassword(newPassword: String, callback: (AuthResult) -> Unit) {
         val user = auth.currentUser

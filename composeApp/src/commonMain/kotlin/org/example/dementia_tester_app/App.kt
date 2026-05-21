@@ -143,9 +143,14 @@ fun App() {
                             }
                         }
                         is DatabaseResult.Error -> {
-                            // Default to login on error
-                            authService.signOut()
-                            currentScreen = "Login"
+                            if (result.message.contains("Profile not found", ignoreCase = true)) {
+                                // If profile is not found, redirect to Profile screen to complete registration
+                                currentScreen = "Profile"
+                            } else {
+                                // For other errors (e.g., network), sign out and return to login
+                                authService.signOut()
+                                currentScreen = "Login"
+                            }
                         }
                     }
                     isLoadingProfile = false
@@ -286,7 +291,8 @@ fun App() {
                         "Profile" -> Profile(
                             onBack = {
                                 profileRefreshKey++
-                                currentScreen = getDashboardType()
+                                isLoadingProfile = true
+                                currentScreen = "Loading"
                             }
                         )
                         "logout" -> {

@@ -1,24 +1,25 @@
 package org.example.dementia_tester_app.data
 
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.ktx.database
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
-import android.net.Uri
+import android.util.Log
 
 /**
- * Android implementation of UserProfileService using Firebase Realtime Database
+ * Android implementation of UserProfileService using Firebase Firestore and Storage
  */
 actual class UserProfileService {
     private val auth = FirebaseAuth.getInstance()
-    private val database = Firebase.database.reference
-    private val dbPath = "UserProfiles"
+    private val firestore = Firebase.firestore
+    private val storage = Firebase.storage
+    private val collectionPath = "UserProfiles"
+    private val TAG = "UserProfileService"
 
     /**
-     * Get the current user's profile
+     * Get the current user's profile from Firestore
      */
     actual fun getCurrentUserProfile(callback: (DatabaseResult<UserProfile>) -> Unit) {
         val userId = auth.currentUser?.uid
@@ -26,35 +27,38 @@ actual class UserProfileService {
             callback(DatabaseResult.Error("No user is signed in"))
             return
         }
-        // Fetch the user profile
-        database.child(dbPath).child(userId)
+        
+        Log.d(TAG, "Fetching profile for user: $userId")
+        firestore.collection(collectionPath).document(userId)
             .get()
-            .addOnSuccessListener { snapshot ->
-                if (!snapshot.exists()) {
+            .addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    Log.w(TAG, "Profile not found for $userId")
                     callback(DatabaseResult.Error("Profile not found. Please create a profile."))
                     return@addOnSuccessListener
                 }
                 
                 try {
-                    // Convert snapshot to Map and use UserProfile.fromMap to create the profile
-                    val data = snapshot.value as? Map<*, *>
+                    val data = document.data
                     if (data != null) {
                         val profile = UserProfile.fromMap(data, userId)
                         callback(DatabaseResult.Success(profile))
                     } else {
-                        callback(DatabaseResult.Error("Profile data is empty or in wrong format"))
+                        callback(DatabaseResult.Error("Profile data is empty"))
                     }
                 } catch (e: Exception) {
+                    Log.e(TAG, "Parsing error", e)
                     callback(DatabaseResult.Error("Failed to parse user profile: ${e.message}"))
                 }
             }
             .addOnFailureListener { e ->
+                Log.e(TAG, "Firestore fetch error", e)
                 callback(DatabaseResult.Error("Failed to get user profile: ${e.message}"))
             }
     }
 
     /**
-     * Update the current user's profile
+     * Update the current user's profile in Firestore
      */
     actual fun updateUserProfile(userProfile: UserProfile, callback: (DatabaseResult<Unit>) -> Unit) {
         val userId = auth.currentUser?.uid
@@ -63,32 +67,37 @@ actual class UserProfileService {
             return
         }
 
-        // FETCH existing profile first to preserve sensitive fields (role/email)
-        database.child(dbPath).child(userId).get().addOnSuccessListener { snapshot ->
-            val currentData = snapshot.value as? Map<String, Any>
-            val updates = userProfile.toMap().toMutableMap()
-            
-            // FORCE keep the original role and email from the server to prevent escalation
-            if (currentData != null) {
-                updates["userType"] = currentData["userType"] ?: "user"
-                updates["email"] = currentData["email"] ?: ""
+        Log.d(TAG, "Updating profile for user: $userId")
+        // Fetch existing profile first to preserve sensitive fields (role/email)
+        firestore.collection(collectionPath).document(userId).get()
+            .addOnSuccessListener { document ->
+                val updates = userProfile.toMap().toMutableMap()
+                
+                if (document.exists()) {
+                    // Force keep original role and email
+                    updates["userType"] = document.getString("userType") ?: "user"
+                    updates["email"] = document.getString("email") ?: ""
+                }
+                
+                firestore.collection(collectionPath).document(userId)
+                    .set(updates, SetOptions.merge())
+                    .addOnSuccessListener {
+                        Log.d(TAG, "Profile updated successfully")
+                        callback(DatabaseResult.Success(Unit))
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Update failure", e)
+                        callback(DatabaseResult.Error("Failed to update user profile: ${e.message}"))
+                    }
             }
-            
-            database.child(dbPath).child(userId).updateChildren(updates)
-                .addOnSuccessListener {
-                    callback(DatabaseResult.Success(Unit))
-                }
-                .addOnFailureListener { e ->
-                    callback(DatabaseResult.Error("Failed to update user profile: ${e.message}"))
-                }
-        }.addOnFailureListener { e ->
-            callback(DatabaseResult.Error("Security Check Failed: ${e.message}"))
-        }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Security check fetch failure", e)
+                callback(DatabaseResult.Error("Security Check Failed: ${e.message}"))
+            }
     }
 
     /**
      * Get all users with userType = User
-     * Only doctors are authorized to access this method
      */
     actual fun getAllUsers(callback: (DatabaseResult<List<UserProfile>>) -> Unit) {
         val userId = auth.currentUser?.uid
@@ -97,79 +106,48 @@ actual class UserProfileService {
             return
         }
         
-        // First check if the current user is a doctor
-        database.child(dbPath).child(userId)
-            .get()
-            .addOnSuccessListener { snapshot ->
-                if (!snapshot.exists()) {
-                    callback(DatabaseResult.Error("Profile not found. Please create a profile."))
+        // First check if current user is authorized (doctor)
+        firestore.collection(collectionPath).document(userId).get()
+            .addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    callback(DatabaseResult.Error("Profile not found"))
                     return@addOnSuccessListener
                 }
                 
-                try {
-                    // Convert snapshot to Map and use UserProfile.fromMap to create the profile
-                    val data = snapshot.value as? Map<*, *>
-                    if (data != null) {
-                        val currentUserProfile = UserProfile.fromMap(data, userId)
-                        
-                        // Check if the current user is a doctor
-                        if (currentUserProfile.userType != UserType.DOCTOR) {
-                            callback(DatabaseResult.Error("Not authorized. Only doctors can access user data."))
-                            return@addOnSuccessListener
-                        }
-                        
-                        // If the user is a doctor, proceed to fetch all users
-                        fetchAllUsers(callback)
-                    } else {
-                        callback(DatabaseResult.Error("Profile data is empty or in wrong format"))
-                    }
-                } catch (e: Exception) {
-                    callback(DatabaseResult.Error("Failed to parse user profile: ${e.message}"))
+                val userType = document.getString("userType")
+                if (userType != "doctor") {
+                    callback(DatabaseResult.Error("Not authorized. Only doctors can access user data."))
+                    return@addOnSuccessListener
                 }
+                
+                fetchAllUsers(callback)
             }
             .addOnFailureListener { e ->
-                callback(DatabaseResult.Error("Failed to get user profile: ${e.message}"))
+                callback(DatabaseResult.Error("Authorization check failed: ${e.message}"))
             }
     }
     
-    /**
-     * Helper method to fetch all users with userType = User
-     */
     private fun fetchAllUsers(callback: (DatabaseResult<List<UserProfile>>) -> Unit) {
-        // Query all user profiles
-        database.child(dbPath).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
+        firestore.collection(collectionPath)
+            .whereEqualTo("userType", "user")
+            .get()
+            .addOnSuccessListener { snapshot ->
                 try {
-                    val userProfiles = mutableListOf<UserProfile>()
-                    
-                    // Iterate through all user profiles
-                    for (userSnapshot in snapshot.children) {
-                        val userId = userSnapshot.key
-                        val userData = userSnapshot.value as? Map<*, *>
-                        if (userData != null && userId != null) {
-                            val userProfile = UserProfile.fromMap(userData, userId)
-                            
-                            // Only include users with userType = User
-                            if (userProfile.userType == UserType.USER) {
-                                userProfiles.add(userProfile)
-                            }
-                        }
+                    val userProfiles = snapshot.documents.mapNotNull { doc ->
+                        doc.data?.let { UserProfile.fromMap(it, doc.id) }
                     }
-                    
                     callback(DatabaseResult.Success(userProfiles))
                 } catch (e: Exception) {
                     callback(DatabaseResult.Error("Failed to fetch users: ${e.message}"))
                 }
             }
-            
-            override fun onCancelled(error: DatabaseError) {
-                callback(DatabaseResult.Error("Failed to fetch users: ${error.message}"))
+            .addOnFailureListener { e ->
+                callback(DatabaseResult.Error("Failed to fetch users: ${e.message}"))
             }
-        })
     }
 
     /**
-     * Upload a profile image to Firebase Storage
+     * Upload a profile image to Firebase Storage and return the download URL
      */
     actual fun uploadProfileImage(imageBytes: ByteArray, callback: (DatabaseResult<String>) -> Unit) {
         val userId = auth.currentUser?.uid
@@ -178,18 +156,34 @@ actual class UserProfileService {
             return
         }
 
-        val storageRef = com.google.firebase.ktx.Firebase.storage.reference
-        val profileImageRef = storageRef.child("profile_images/${userId}.jpg")
+        Log.d(TAG, "Uploading profile image for user: $userId")
+        val profileImageRef = storage.reference.child("profile_images/${userId}.jpg")
 
         profileImageRef.putBytes(imageBytes)
-            .addOnSuccessListener {
+            .addOnSuccessListener { _ ->
+                Log.d(TAG, "Image uploaded successfully, getting download URL")
                 profileImageRef.downloadUrl.addOnSuccessListener { uri ->
-                    callback(DatabaseResult.Success(uri.toString()))
+                    val url = uri.toString()
+                    Log.d(TAG, "Download URL: $url")
+                    
+                    // Automatically update the Firestore document with the new URL
+                    firestore.collection(collectionPath).document(userId)
+                        .update("profileImageUrl", url)
+                        .addOnSuccessListener {
+                            callback(DatabaseResult.Success(url))
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e(TAG, "Failed to update profileImageUrl in Firestore", e)
+                            // We still return success for the upload, but inform about the URL
+                            callback(DatabaseResult.Success(url))
+                        }
                 }.addOnFailureListener { e ->
+                    Log.e(TAG, "Failed to get download URL", e)
                     callback(DatabaseResult.Error("Failed to get download URL: ${e.message}"))
                 }
             }
             .addOnFailureListener { e ->
+                Log.e(TAG, "Upload failed", e)
                 callback(DatabaseResult.Error("Failed to upload image: ${e.message}"))
             }
     }

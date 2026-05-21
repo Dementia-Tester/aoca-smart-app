@@ -31,15 +31,13 @@ actual class AuthService actual constructor() {
 
             val message = if (error.domain == "FIRAuthErrorDomain") {
                 when (error.code.toLong()) {
-                    INVALID_EMAIL   -> "Invalid email."
-                    USER_NOT_FOUND  -> "User not found."
-                    WRONG_PASSWORD  -> "Invalid credentials."
-                    EMAIL_IN_USE    -> "Email already in use."
-                    WEAK_PASSWORD   -> "Weak password."
-                    else            -> "Authentication failed: ${error.localizedDescription}"
+                    INVALID_EMAIL   -> "Invalid email address."
+                    USER_NOT_FOUND  -> "No account found with this email."
+                    WRONG_PASSWORD  -> "Invalid email or password."
+                    else            -> error.localizedDescription
                 }
             } else {
-                "Authentication failed: ${error.localizedDescription}"
+                error.localizedDescription
             }
 
             callback(AuthResult.Error(message))
@@ -56,11 +54,11 @@ actual class AuthService actual constructor() {
             if (error == null) {
                 callback(AuthResult.Success)
             } else {
-                val message = when (error.code) {
+                val message = when (error.code.toLong()) {
                     WEAK_PASSWORD -> "Password is too weak."
                     INVALID_EMAIL -> "Invalid email format."
-                    EMAIL_IN_USE -> "User with this email already exists."
-                    else -> "Registration failed: ${error.localizedDescription}"
+                    EMAIL_IN_USE -> "An account already exists with this email."
+                    else -> error.localizedDescription
                 }
                 callback(AuthResult.Error(message))
             }
@@ -136,6 +134,10 @@ actual class AuthService actual constructor() {
 
     actual fun getCurrentUserId(): String? {
         return FIRAuth.auth()?.currentUser()?.uid()
+    }
+
+    actual fun getCurrentUserEmail(): String? {
+        return FIRAuth.auth()?.currentUser()?.email()
     }
 
     actual fun changePassword(newPassword: String, callback: (AuthResult) -> Unit) {

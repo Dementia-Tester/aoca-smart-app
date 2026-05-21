@@ -16,6 +16,10 @@ import org.example.dementia_tester_app.data.UserProfileService
 import org.example.dementia_tester_app.data.UserType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 import org.example.dementia_tester_app.utils.calculateAgeFromDateOfBirth
 
 @Composable
@@ -70,6 +74,7 @@ fun AppMenuContent(
     var userName by remember { mutableStateOf("") }
     var userAge by remember { mutableStateOf<Int?>(null) }
     var userType by remember { mutableStateOf(UserType.USER) }
+    var profileImageUrl by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     
@@ -83,6 +88,7 @@ fun AppMenuContent(
                     userName = profile.name.ifEmpty { "User" }
                     userAge = calculateAgeFromDateOfBirth(profile.dateOfBirth)
                     userType = profile.userType
+                    profileImageUrl = profile.profileImageUrl
                     errorMessage = null
                 }
                 is DatabaseResult.Error -> {
@@ -119,13 +125,24 @@ fun AppMenuContent(
                     .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-                // Profile icon with gender-based color
-                Icon(
-                    imageVector     = Icons.Default.Person,
-                    contentDescription = "Profile Icon",
-                    tint            = Color.Black,
-                    modifier        = Modifier.size(70.dp)
-                )
+                // Profile icon or image
+                if (profileImageUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = profileImageUrl,
+                        contentDescription = "Profile Image",
+                        modifier = Modifier
+                            .size(70.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Profile Icon",
+                        tint = Color.Black,
+                        modifier = Modifier.size(70.dp)
+                    )
+                }
                 
                 if (isLoading) {
                     // Show loading indicator

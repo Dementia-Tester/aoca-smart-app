@@ -67,19 +67,20 @@ fun ForgotPassword(onBack: () -> Unit = {}) {
         // Submit Button
         Button(
             onClick = {
-                val isEmailEmpty = email.isEmptyTrimmed()
+                val trimmedEmail = email.trim()
+                val isEmailEmpty = trimmedEmail.isEmpty()
 
                 if (isEmailEmpty) {
-                    emailError = isEmailEmpty
+                    emailError = true
                     errorMessage = "Please enter your email"
                     showErrorMessage = true
                 } else {
                     isLoading = true
-                    authService.sendPasswordResetEmail(email) { result ->
+                    authService.sendPasswordResetEmail(trimmedEmail) { result ->
                         isLoading = false
                         when (result) {
                             is AuthResult.Success -> {
-                                successMessage = "Password reset email has been sent to $email"
+                                successMessage = "Password reset email has been sent to $trimmedEmail"
                                 showSuccessMessage = true
                             }
                             is AuthResult.Error -> {

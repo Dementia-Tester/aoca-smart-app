@@ -115,8 +115,8 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
                     val userProfile = UserProfile(
                         name = name,
                         dateOfBirth = dateOfBirth,
-                        email = email,
-                        phoneNumber = phoneNumber,
+                        email = email.trim(),
+                        phoneNumber = phoneNumber.trim(),
                         userType = UserType.USER,
                         address = address,
                         suburb = suburb,
@@ -125,9 +125,9 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
                         country = country,
                         gender = gender,
                         emergencyName = emergencyName,
-                        emergencyEmail = emergencyEmail,
+                        emergencyEmail = emergencyEmail.trim(),
                         emergencyRelation = emergencyRelation,
-                        emergencyPhoneNumber = emergencyPhoneNumber
+                        emergencyPhoneNumber = emergencyPhoneNumber.trim()
                     )
                     
                     // Save user profile to database
@@ -521,7 +521,7 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
                     showErrorMessage = true
                 }
                 else {
-                    handleSignUp(email, password)
+                    handleSignUp(email.trim(), password)
                 }
             },
             modifier = Modifier

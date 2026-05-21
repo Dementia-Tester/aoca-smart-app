@@ -1,6 +1,7 @@
 package org.example.dementia_tester_app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -25,12 +26,14 @@ import coil3.compose.AsyncImage
 import org.example.dementia_tester_app.data.DatabaseResult
 import org.example.dementia_tester_app.data.UserProfile
 import org.example.dementia_tester_app.data.UserProfileService
+import org.example.dementia_tester_app.auth.AuthService
 import org.example.dementia_tester_app.ui.components.*
 import org.example.dementia_tester_app.utils.*
 
 @Composable
 fun Profile(onBack: () -> Unit = {}) {
     val userProfileService = remember { UserProfileService() }
+    val authService = remember { AuthService() }
 
     var isEditMode by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
@@ -45,6 +48,23 @@ fun Profile(onBack: () -> Unit = {}) {
 
     var userProfile by remember { mutableStateOf(UserProfile()) }
     var originalProfile by remember { mutableStateOf(UserProfile()) }
+    var isUploading by remember { mutableStateOf(false) }
+
+    val imagePickerLauncher = rememberImagePickerLauncher { bytes ->
+        isUploading = true
+        userProfileService.uploadProfileImage(bytes) { result ->
+            isUploading = false
+            when (result) {
+                is DatabaseResult.Success -> {
+                    userProfile = userProfile.copy(profileImageUrl = result.data)
+                    showSuccessMessage = true
+                }
+                is DatabaseResult.Error -> {
+                    errorMessage = "Failed to upload image: ${result.message}"
+                }
+            }
+        }
+    }
 
     var name by remember { mutableStateOf("") }
     var dateOfBirth by remember { mutableStateOf("") }
@@ -131,25 +151,30 @@ fun Profile(onBack: () -> Unit = {}) {
             return
         }
 
-        if (!email.isValidEmail()) {
+        val trimmedEmail = email.trim()
+        val trimmedPhoneNumber = phoneNumber.trim()
+        val trimmedEmergencyEmail = emergencyEmail.trim()
+        val trimmedEmergencyPhoneNumber = emergencyPhoneNumber.trim()
+
+        if (!trimmedEmail.isValidEmail()) {
             emailError = true
             errorMessage = "Please enter a valid email address"
             return
         }
 
-        if (!phoneNumber.isValidPhoneNumber()) {
+        if (!trimmedPhoneNumber.isValidPhoneNumber()) {
             phoneNumberError = true
             errorMessage = "Phone number should contain only digits"
             return
         }
 
-        if (emergencyEmail.isNotEmpty() && !emergencyEmail.isValidEmail()) {
+        if (trimmedEmergencyEmail.isNotEmpty() && !trimmedEmergencyEmail.isValidEmail()) {
             emergencyEmailError = true
             errorMessage = "Please enter a valid emergency contact email address"
             return
         }
 
-        if (!emergencyPhoneNumber.isValidPhoneNumber()) {
+        if (!trimmedEmergencyPhoneNumber.isValidPhoneNumber()) {
             emergencyPhoneNumberError = true
             errorMessage = "Emergency contact phone number should contain only digits"
             return
@@ -158,8 +183,8 @@ fun Profile(onBack: () -> Unit = {}) {
         val updatedProfile = UserProfile(
             name = name,
             dateOfBirth = dateOfBirth,
-            email = email,
-            phoneNumber = phoneNumber,
+            email = trimmedEmail,
+            phoneNumber = trimmedPhoneNumber,
             address = address,
             suburb = suburb,
             state = state,
@@ -167,9 +192,9 @@ fun Profile(onBack: () -> Unit = {}) {
             country = country,
             gender = gender,
             emergencyName = emergencyName,
-            emergencyEmail = emergencyEmail,
+            emergencyEmail = trimmedEmergencyEmail,
             emergencyRelation = emergencyRelation,
-            emergencyPhoneNumber = emergencyPhoneNumber,
+            emergencyPhoneNumber = trimmedEmergencyPhoneNumber,
             profileImageUrl = userProfile.profileImageUrl
         )
 
@@ -208,7 +233,17 @@ fun Profile(onBack: () -> Unit = {}) {
                 }
 
                 is DatabaseResult.Error -> {
-                    errorMessage = "Failed to load profile: ${result.message}"
+                    if (result.message.contains("Profile not found", ignoreCase = true)) {
+                        // For missing profiles (newly migrated users), enter edit mode automatically
+                        isEditMode = true
+                        errorMessage = "Please complete your profile details to continue."
+                        // Pre-fill email from Auth if available
+                        authService.getCurrentUserEmail()?.let { currentEmail ->
+                            userProfile = userProfile.copy(email = currentEmail)
+                        }
+                    } else {
+                        errorMessage = "Failed to load profile: ${result.message}"
+                    }
                 }
             }
         }
@@ -229,7 +264,7 @@ fun Profile(onBack: () -> Unit = {}) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (isLoading) {
+        if (isLoading || isUploading) {
             LoadingSpinner()
         }
 
@@ -277,7 +312,10 @@ fun Profile(onBack: () -> Unit = {}) {
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
-                        .background(Color.LightGray),
+                        .background(Color.LightGray)
+                        .clickable(enabled = isEditMode) {
+                            imagePickerLauncher()
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     if (userProfile.profileImageUrl.isNotEmpty()) {

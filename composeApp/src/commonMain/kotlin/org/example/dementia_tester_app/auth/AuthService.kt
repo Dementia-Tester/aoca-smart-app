@@ -72,6 +72,12 @@ expect class AuthService() {
     fun getCurrentUserId(): String?
 
     /**
+     * Get the current user's email
+     * @return the user's email if signed in, null otherwise
+     */
+    fun getCurrentUserEmail(): String?
+
+    /**
      * Change password for the currently signed-in user
      */
     fun changePassword(newPassword: String, callback: (AuthResult) -> Unit)

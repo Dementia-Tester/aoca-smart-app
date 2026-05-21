@@ -18,6 +18,7 @@ import org.example.dementia_tester_app.auth.AuthResult
 import org.example.dementia_tester_app.auth.AuthService
 import org.example.dementia_tester_app.ui.components.LoadingSpinner
 import org.example.dementia_tester_app.utils.validateFields
+import org.example.dementia_tester_app.utils.isValidEmail
 
 @Composable
 fun LoginIcon() {
@@ -57,16 +58,6 @@ fun Login(
         if (fieldErrors.containsKey(field)) {
             fieldErrors = fieldErrors - field
         }
-    }
-
-    // FIX: Added email format validation using a standard regex.
-    // Previously only empty-field checks were performed, meaning a malformed
-    // email like "notanemail" or "missing@" would still trigger a network call.
-    // This check runs before signIn() and surfaces a clear error to the user
-    // without making an unnecessary Firebase request.
-    fun isValidEmail(value: String): Boolean {
-        return Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
-            .matches(value.trim())
     }
 
     var showErrorMessage by remember { mutableStateOf(false) }
@@ -135,10 +126,11 @@ fun Login(
         // Login Button
         Button(
             onClick = {
+                val trimmedEmail = email.trim()
                 // Step 1: Check for empty fields using the shared validation utility
                 fieldErrors = validateFields(
                     mapOf(
-                        EMAIL to email,
+                        EMAIL to trimmedEmail,
                         PASSWORD to password
                     )
                 )
@@ -146,19 +138,19 @@ fun Login(
                 if (fieldErrors.isNotEmpty()) {
                     errorMessage = "Please enter all required fields"
                     showErrorMessage = true
-                    // Step 2: Check email format before making any network call
-                } else if (!isValidEmail(email)) {
+                    // Step 2: Check email format before making any network call using shared utility
+                } else if (!trimmedEmail.isValidEmail()) {
                     fieldErrors = mapOf(EMAIL to true)
                     errorMessage = "Please enter a valid email address"
                     showErrorMessage = true
                 } else {
                     // All fields are valid, proceed with login
                     isLoading = true
-                    authService.signIn(email, password) { result ->
+                    authService.signIn(trimmedEmail, password) { result ->
                         isLoading = false
                         when (result) {
                             is AuthResult.Success -> {
-                                onLogin(email)
+                                onLogin(trimmedEmail)
                             }
                             is AuthResult.Error -> {
                                 errorMessage = result.message
