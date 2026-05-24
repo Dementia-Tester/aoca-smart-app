@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -56,7 +57,6 @@ fun Activities() {
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Summary Section
         DailySummarySection(todaySummary, isLoadingSummary)
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -68,16 +68,17 @@ fun Activities() {
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        // Activities List
         when {
             activities == null -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
+
             activities!!.isEmpty() -> {
                 EmptyState()
             }
+
             else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -107,9 +108,9 @@ fun DailySummarySection(summary: Map<String, Int>?, isLoading: Boolean) {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             if (isLoading) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             } else {
@@ -119,7 +120,7 @@ fun DailySummarySection(summary: Map<String, Int>?, isLoading: Boolean) {
                 ) {
                     SummaryItem("Total", summary?.get("total") ?: 0, Icons.Default.Assessment)
                     SummaryItem("Tasks", summary?.get("reminder") ?: 0, Icons.Default.CheckCircle)
-                    SummaryItem("Tests", summary?.get("test") ?: 0, Icons.Default.FactCheck)
+                    SummaryItem("Tests", summary?.get("test") ?: 0, Icons.AutoMirrored.Filled.FactCheck)
                     SummaryItem("Games", summary?.get("game") ?: 0, Icons.Default.Games)
                 }
             }
@@ -153,7 +154,7 @@ fun SummaryItem(label: String, count: Int, icon: ImageVector) {
 fun ActivityItem(activity: Activity) {
     val icon = when (activity.type) {
         "game" -> Icons.Default.Games
-        "test" -> Icons.Default.FactCheck
+        "test" -> Icons.AutoMirrored.Filled.FactCheck
         "reminder" -> Icons.Default.Notifications
         "appointment" -> Icons.Default.Event
         else -> Icons.Default.History
