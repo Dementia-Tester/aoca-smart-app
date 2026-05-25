@@ -6,12 +6,12 @@ package org.example.dementia_tester_app.data
  */
 expect class AppointmentService() {
     /**
-     * Write a new appointment to Firebase Realtime DB at Appointments/{userId}/{id}.
+     * Write a new appointment to Firebase Firestore in the 'appointments' collection.
      */
     fun createAppointment(appointment: Appointment, callback: (DatabaseResult<Unit>) -> Unit)
 
     /**
-     * Read all appointments for the current user from Firebase.
+     * Read all appointments for the current user from Firebase Firestore.
      */
     fun getAppointments(callback: (DatabaseResult<List<Appointment>>) -> Unit)
 }
