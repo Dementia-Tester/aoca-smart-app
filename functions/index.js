@@ -39,10 +39,11 @@ function getPatientEmailTemplate(appointment) {
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Doctor:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.doctor}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.doctor || "an assigned doctor"}</td>
         </tr>
         <tr>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Date & Time:</strong></td>
+          <td style="padding: 8px; border-bottom: 1px soli
+          d #ddd;"><strong>Date & Time:</strong></td>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.date} at ${appointment.time}</td>
         </tr>
         <tr>
@@ -75,7 +76,7 @@ function getAdminEmailTemplate(appointment) {
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Doctor assigned:</strong></td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.doctor}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd;">${appointment.doctor || "an assigned doctor"}</td>
         </tr>
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Date & Time:</strong></td>
