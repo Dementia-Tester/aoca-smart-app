@@ -2,7 +2,6 @@ package org.example.dementia_tester_app.data
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
@@ -16,13 +15,17 @@ actual class AppointmentService {
 
     actual fun createAppointment(appointment: Appointment, callback: (DatabaseResult<Unit>) -> Unit) {
         val userId = auth.currentUser?.uid
-        if (userId == null) { callback(DatabaseResult.Error("No user is signed in")); return }
+        if (userId == null) { 
+            callback(DatabaseResult.Error("No user is signed in"))
+            return 
+        }
 
-        // We'll let Firestore generate the ID, or we can use the one from the collection ref
+        // Let Firestore generate the unique ID
         val docRef = firestore.collection(collectionPath).document()
         val id = docRef.id
 
         val appt = appointment.copy(id = id, userId = userId)
+        
         docRef.set(appt.toMap())
             .addOnSuccessListener { callback(DatabaseResult.Success(Unit)) }
             .addOnFailureListener { e ->
@@ -32,11 +35,14 @@ actual class AppointmentService {
 
     actual fun getAppointments(callback: (DatabaseResult<List<Appointment>>) -> Unit) {
         val userId = auth.currentUser?.uid
-        if (userId == null) { callback(DatabaseResult.Error("No user is signed in")); return }
+        if (userId == null) { 
+            callback(DatabaseResult.Error("No user is signed in"))
+            return 
+        }
 
         firestore.collection(collectionPath)
             .whereEqualTo("userId", userId)
-            .orderBy("date", Query.Direction.DESCENDING) // Optional: sort by date
+            // .orderBy() is removed here to perfectly match iOS and avoid "Missing Index" crashes
             .get()
             .addOnSuccessListener { snapshot ->
                 try {
