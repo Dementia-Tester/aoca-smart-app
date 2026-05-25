@@ -12,7 +12,7 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import org.example.dementia_tester_app.R
+import com.aoca.dementiatester.R
 
 /**
  * BroadcastReceiver for handling notification alarms.
@@ -27,7 +27,7 @@ class NotificationReceiver : BroadcastReceiver() {
         const val CHANNEL_ID = "health"
         const val CHANNEL_NAME = "Health"
         const val CHANNEL_DESCRIPTION = "Health reminders and alerts"
-        const val ACTION_SHOW_NOTIFICATION = "org.example.dementia_tester_app.SHOW_NOTIFICATION"
+        const val ACTION_SHOW_NOTIFICATION = "com.aoca.dementiatester.SHOW_NOTIFICATION"
         private const val TAG = "NotificationReceiver"
     }
     

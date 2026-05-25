@@ -117,11 +117,11 @@ kotlin {
 }
 
 android {
-    namespace = "org.example.dementia_tester_app"
+    namespace = "com.aoca.dementiatester"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "org.example.dementia_tester_app"
+        applicationId = "com.aoca.dementiatester"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 3
