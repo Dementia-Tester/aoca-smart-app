@@ -18,10 +18,13 @@ actual class AppointmentService {
         if (userId == null) { callback(DatabaseResult.Error("No user is signed in")); return }
         val firestore = FIRFirestore.firestore()
 
+        // Let Firestore generate the unique ID
         val docRef = firestore.collectionWithPath(collectionPath).documentWithAutoID()
         val id = docRef.documentID()
 
         val appt = appointment.copy(id = id, userId = userId)
+        
+        // Convert Kotlin map to Objective-C friendly map (handling nulls)
         val objcMap: Map<Any?, Any?> = appt.toMap().entries.associate { (k, v) ->
             (k as Any?) to (v ?: NSNull())
         }
