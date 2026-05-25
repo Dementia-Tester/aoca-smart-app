@@ -26,7 +26,7 @@ actual class ActivityService {
 
     private fun getActivitiesCollection() = 
         auth?.currentUser()?.uid()?.let { userId ->
-            firestore.collectionWithPath("users").documentWithPath(userId).collectionWithPath("activities")
+            firestore.collectionWithPath("UserProfiles").documentWithPath(userId).collectionWithPath("activities")
         }
 
     actual fun logActivity(activity: Activity, callback: (DatabaseResult<Unit>) -> Unit) {

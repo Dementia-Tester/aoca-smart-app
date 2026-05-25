@@ -2,6 +2,7 @@ package org.example.dementia_tester_app.data
 
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -17,6 +18,7 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
 
     // Date formatter for readable timestamps
     private val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    private val TAG = "UserQuizService_${type.name}"
 
     // Helper to parse 'surveyComplete' stored as 1/0 or true/false or string variants
     private fun parseSurveyComplete(value: Any?): Boolean {
@@ -43,10 +45,12 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
      * @return Unit (result delivered via callback)
      */
     actual fun fetchSurveyQuestions(callback: (DatabaseResult<List<Question>>) -> Unit) {
+        Log.d(TAG, "Fetching survey questions from: $dbPath/$questionTable")
         database.child(dbPath).child(questionTable)
             .get()
             .addOnSuccessListener { snapshot ->
                 if (!snapshot.exists()) {
+                    Log.w(TAG, "No survey questions found at path: $dbPath/$questionTable")
                     callback(DatabaseResult.Error("Health survey questions not found"))
                     return@addOnSuccessListener
                 }
@@ -89,12 +93,15 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
                 }
 
                 if (questions.isEmpty()) {
+                    Log.w(TAG, "Survey questions snapshot exists but parsed list is empty")
                     callback(DatabaseResult.Error("No questions found in the database"))
                 } else {
+                    Log.d(TAG, "Successfully fetched ${questions.size} survey questions")
                     callback(DatabaseResult.Success(questions))
                 }
             }
             .addOnFailureListener { e ->
+                Log.e(TAG, "Failed to fetch survey questions. Error: ${e.message}", e)
                 callback(DatabaseResult.Error("Failed to fetch questions: ${e.message}"))
             }
     }
@@ -112,11 +119,13 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
             return
         }
 
+        Log.d(TAG, "Fetching cognitive questions from: $dbPath/$questionTable")
         database.child(dbPath)
             .child(questionTable)
             .get()
             .addOnSuccessListener { snapshot ->
                 if (!snapshot.exists() || !snapshot.hasChildren()) {
+                    Log.w(TAG, "No cognitive questions found at path: $dbPath/$questionTable")
                     callback(DatabaseResult.Success(emptyList()))
                     return@addOnSuccessListener
                 }
@@ -167,16 +176,18 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
                             questions.add(question)
                         }
                     } catch (e: Exception) {
-                        println("Error parsing question: ${e.message}")
+                        Log.e(TAG, "Error parsing cognitive question: ${e.message}", e)
                     }
                 }
                 
                 // Sort questions by id
                 val sortedQuestions = questions.sortedBy { it.id }
+                Log.d(TAG, "Successfully fetched ${sortedQuestions.size} cognitive questions")
 
                 callback(DatabaseResult.Success(sortedQuestions))
             }
             .addOnFailureListener { e ->
+                Log.e(TAG, "Failed to fetch cognitive questions. Error: ${e.message}", e)
                 callback(DatabaseResult.Error("Failed to get questions: ${e.message}"))
             }
     }
@@ -215,12 +226,14 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
      * @return Unit (result delivered via callback)
      */
     actual fun getUserScores(userId: String, callback: (DatabaseResult<List<UserResults>>) -> Unit) {
+        Log.d(TAG, "Getting user scores for $userId from: $dbPath/$userResponsesTable")
         database.child(dbPath)
             .child(userResponsesTable)
             .child(userId)
             .get()
             .addOnSuccessListener { snapshot ->
                 if (!snapshot.exists() || !snapshot.hasChildren()) {
+                    Log.i(TAG, "No scores found for user $userId")
                     callback(DatabaseResult.Success(emptyList()))
                     return@addOnSuccessListener
                 }
@@ -297,10 +310,10 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
                             userResultsList.add(UserResults(attempts = listOf(userAttempts)))
 
                         } catch (e: Exception) {
-                            println("Error parsing test result: ${e.message}")
+                            Log.e(TAG, "Error parsing cognitive test result for $userId: ${e.message}", e)
                         }
                     }
-
+                    Log.d(TAG, "Returning ${userResultsList.size} cognitive results for $userId")
                     callback(DatabaseResult.Success(userResultsList))
                 } else {
                     // Health Survey: return only completed attempts with their total scores
@@ -327,6 +340,7 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
                                 )
                                 userResultsList.add(UserResults(attempts = listOf(userAttempts)))
                             }
+                            Log.d(TAG, "Returning ${userResultsList.size} health survey results for $userId")
                             callback(DatabaseResult.Success(userResultsList))
                         } else {
                             // Fallback if questions can't be fetched
@@ -349,12 +363,14 @@ actual class UserQuizService actual constructor(private val type: UserQuizType) 
                                 )
                                 userResultsList.add(UserResults(attempts = listOf(userAttempts)))
                             }
+                            Log.d(TAG, "Returning ${userResultsList.size} health survey results (fallback) for $userId")
                             callback(DatabaseResult.Success(userResultsList))
                         }
                     }
                 }
             }
             .addOnFailureListener { e ->
+                Log.e(TAG, "Failed to get user scores for $userId. Error: ${e.message}", e)
                 callback(DatabaseResult.Error("Failed to get scores: ${e.message}"))
             }
     }

@@ -23,7 +23,7 @@ actual class ActivityService {
 
     private fun getActivitiesCollection() = 
         auth.currentUser?.uid?.let { userId ->
-            firestore.collection("users").document(userId).collection("activities")
+            firestore.collection("UserProfiles").document(userId).collection("activities")
         }
 
     actual fun logActivity(activity: Activity, callback: (DatabaseResult<Unit>) -> Unit) {
@@ -45,22 +45,29 @@ actual class ActivityService {
     }
 
     actual fun getActivitiesFlow(): Flow<List<Activity>> = callbackFlow {
+        val currentUser = auth.currentUser
+        val userId = currentUser?.uid
         val collection = getActivitiesCollection()
+        
         if (collection == null) {
+            Log.e(tag, "getActivitiesFlow: No user signed in or collection is null")
             trySend(emptyList())
             close()
             return@callbackFlow
         }
 
+        Log.d(tag, "Starting activities flow listener for UID: $userId")
         val registration = collection
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
-                    Log.e(tag, "Listen failed", e)
+                    Log.e(tag, "Listen failed for UserProfiles/$userId/activities. This might be a permission issue. Error: ${e.message}", e)
+                    // We don't close the flow on a single error as it might be transient or recovered
                     return@addSnapshotListener
                 }
 
                 if (snapshot != null) {
+                    Log.d(tag, "Received activities snapshot for $userId. Count: ${snapshot.size()}")
                     val activities = snapshot.documents.mapNotNull { doc ->
                         doc.data?.let { Activity.fromMap(it, doc.id) }
                     }
@@ -68,7 +75,10 @@ actual class ActivityService {
                 }
             }
 
-        awaitClose { registration.remove() }
+        awaitClose { 
+            Log.d(tag, "Closing activities flow listener for $userId")
+            registration.remove() 
+        }
     }
 
     actual fun getTodaySummary(callback: (DatabaseResult<Map<String, Int>>) -> Unit) {
