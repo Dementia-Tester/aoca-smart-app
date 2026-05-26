@@ -29,7 +29,7 @@ fun GoogleSignInScreen(
     val db = remember { FirebaseFirestore.getInstance() }
     
     // TODO: Replace with the Web Client ID from your Firebase Console > Authentication > Google
-    val webClientId = "YOUR_WEB_CLIENT_ID_HERE" 
+    val webClientId = "238088670555-acth1uvst0h3ka9nh9g1o8ke1n4poddn.apps.googleusercontent.com" 
 
     val gso = remember {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
