@@ -1,4 +1,4 @@
-package org.example.dementia_tester_app.auth
+package com.aoca.dementiatester.auth
 
 import android.app.Activity
 import android.util.Log
@@ -28,7 +28,7 @@ fun GoogleSignInScreen(
     val auth = remember { FirebaseAuth.getInstance() }
     val db = remember { FirebaseFirestore.getInstance() }
     
-    // Replace with the Web Client ID from your Firebase Console > Authentication > Google
+    // TODO: Replace with the Web Client ID from your Firebase Console > Authentication > Google
     val webClientId = "YOUR_WEB_CLIENT_ID_HERE" 
 
     val gso = remember {
