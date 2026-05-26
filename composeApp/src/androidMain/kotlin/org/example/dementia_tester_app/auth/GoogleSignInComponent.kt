@@ -64,7 +64,8 @@ fun GoogleSignInScreen(
                                         "userType" to "user" // Required by your security rules
                                     )
                                     
-                                    db.collection("users").document(user.uid)
+                                    // To exactly match your firestore.rules:
+                                    db.collection("UserProfiles").document(user.uid)
                                         .set(userProfile)
                                         .addOnSuccessListener {
                                             Log.d("GoogleAuth", "Firestore profile created")
