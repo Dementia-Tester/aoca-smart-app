@@ -13,7 +13,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     id("com.google.gms.google-services")
-//    id("org.jetbrains.kotlin.native.cocoapods")
+//  id("org.jetbrains.kotlin.native.cocoapods")
 }
 
 kotlin {
@@ -52,7 +52,7 @@ kotlin {
             implementation("androidx.activity:activity-compose:1.10.1")
             implementation("androidx.fragment:fragment-ktx:1.8.9")
             implementation("androidx.exifinterface:exifinterface:1.3.7")
-    }
+        }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -172,4 +172,3 @@ android {
 dependencies {
     debugImplementation(compose.uiTooling)
 }
-
