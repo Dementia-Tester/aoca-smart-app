@@ -2,28 +2,12 @@ package org.example.dementia_tester_app.ui.screens.dashboard
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,65 +16,79 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import org.example.dementia_tester_app.auth.AuthService
 import org.example.dementia_tester_app.data.DatabaseResult
 import org.example.dementia_tester_app.data.GameType
 import org.example.dementia_tester_app.data.GraphableAttempts
 import org.example.dementia_tester_app.data.MiniGameScoresService
-import org.example.dementia_tester_app.data.UserGameResults
+import org.example.dementia_tester_app.data.UserAttempts
 import org.example.dementia_tester_app.data.UserQuizService
 import org.example.dementia_tester_app.data.UserQuizType
 import org.example.dementia_tester_app.ui.components.LoadingSpinner
 import org.example.dementia_tester_app.ui.components.ProgressSummary
 import org.example.dementia_tester_app.ui.components.UserTestResults
-import org.example.dementia_tester_app.data.UserAttempts
+import org.example.dementia_tester_app.ui.components.FormColors
 
-/**
- * Progress view for users. Displays information about the user's results from the
- * cognitive assessment test, health survey and minigames.
- */
 @Composable
 fun ProgressView() {
+    val authService = remember { AuthService() }
+    val userId = authService.getCurrentUserId()
 
-    var scoresExpanded by remember({ mutableStateOf(false) })
-    var selectedScoreType by remember({ mutableStateOf("") })
-    // "Language", "Perceptual-motor" and "Social Cognition" are excluded until their
-    // corresponding minigames are implemented.
-    val scoreTypes = listOf(
-        "Total Scores",
-        "Complex Attention",
-        "Executive Function",
-        "Learning and Memory",
-        "Health Survey"
-    )
-
-    var placeholder  by remember({ mutableStateOf("Select Results to Display") })
-    var isLoading by remember { mutableStateOf(false) }
     val cognitiveAssessmentService = remember { UserQuizService(UserQuizType.CognitiveAssessment) }
     val healthSurveyService = remember { UserQuizService(UserQuizType.HealthSurvey) }
     val miniGameScoresService = remember { MiniGameScoresService() }
 
-    val authService = remember { AuthService() }
-    val userId = authService.getCurrentUserId()
+    var assessmentResults by remember { mutableStateOf<List<Any>>(emptyList()) }
+    var surveyResults by remember { mutableStateOf<List<Any>>(emptyList()) }
+    var gameResultsCA by remember { mutableStateOf<List<Any>>(emptyList()) }
+    var gameResultsEF by remember { mutableStateOf<List<Any>>(emptyList()) }
+    var gameResultsLM by remember { mutableStateOf<List<Any>>(emptyList()) }
 
-    var results by remember { mutableStateOf<List<Any>>(emptyList()) }
-    var hasScores by remember { mutableStateOf(false) }
-    var errorMessage by remember({ mutableStateOf("No data available") })
+    var isLoading by remember { mutableStateOf(true) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    
+    // 0: Assessments, 1: Health Surveys, 2: Games
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedGameTab by remember { mutableStateOf(0) }
+    
     val scrollState = rememberScrollState()
 
-    // Helper function to handle the database result
-    fun handleResult(result: DatabaseResult<List<Any>>) {
-        isLoading = false
-        when (result) {
-            is DatabaseResult.Success -> {
-                results = result.data
-                hasScores = result.data.isNotEmpty()
-            }
-            is DatabaseResult.Error -> {
-                hasScores = false
-                results = emptyList()
-                errorMessage = result.message
-            }
+    LaunchedEffect(userId) {
+        if (userId == null) {
+            isLoading = false
+            loadError = "User not logged in."
+            return@LaunchedEffect
+        }
+        
+        // Fetch all data
+        var fetchedCount = 0
+        val totalFetches = 5
+        
+        fun checkDone() {
+            fetchedCount++
+            if (fetchedCount >= totalFetches) isLoading = false
+        }
+        
+        cognitiveAssessmentService.getUserScores(userId) { result ->
+            if (result is DatabaseResult.Success) assessmentResults = result.data
+            checkDone()
+        }
+        healthSurveyService.getUserScores(userId) { result ->
+            if (result is DatabaseResult.Success) surveyResults = result.data
+            checkDone()
+        }
+        miniGameScoresService.getUserGameAttempts(userId, GameType.COMPLEX_ATTENTION) { result ->
+            if (result is DatabaseResult.Success) gameResultsCA = result.data
+            checkDone()
+        }
+        miniGameScoresService.getUserGameAttempts(userId, GameType.EXECUTIVE_FUNCTION) { result ->
+            if (result is DatabaseResult.Success) gameResultsEF = result.data
+            checkDone()
+        }
+        miniGameScoresService.getUserGameAttempts(userId, GameType.LEARNING_AND_MEMORY) { result ->
+            if (result is DatabaseResult.Success) gameResultsLM = result.data
+            checkDone()
         }
     }
 
@@ -99,146 +97,140 @@ fun ProgressView() {
             .fillMaxSize()
             .padding(horizontal = 16.dp)
             .verticalScroll(scrollState)
-
     ) {
         Text(
             text = "Your Progress",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Start,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-
         Text(
-            text = "View your progress",
+            text = "Track your cognitive health and activity engagement over time.",
             fontSize = 16.sp,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 16.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Text(
-            text = "Select Data:",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp)
+        if (isLoading) {
+            Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                LoadingSpinner()
+            }
+        } else if (loadError != null) {
+            Text(loadError!!, color = MaterialTheme.colorScheme.error)
+        } else {
+            // Overview Statistic Cards
+            val totalAssessments = assessmentResults.size
+            val totalSurveys = surveyResults.size
+            val totalGames = gameResultsCA.size + gameResultsEF.size + gameResultsLM.size
+            
+            Row(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                StatisticCard("Assessments", totalAssessments.toString(), Modifier.weight(1f))
+                StatisticCard("Surveys", totalSurveys.toString(), Modifier.weight(1f))
+                StatisticCard("Games Played", totalGames.toString(), Modifier.weight(1f))
+            }
+            
+            // Latest Assessment Summary Card if available
+            val latestAssessment = assessmentResults.filterIsInstance<UserAttempts>().lastOrNull()
+            if (latestAssessment != null) {
+                ProgressSummary(latestAssessment)
+                Spacer(Modifier.height(16.dp))
+            }
 
-        )
-
-        // Button to open dropdown
-        OutlinedButton(
-            onClick = { scoresExpanded = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .height(40.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.White),
-            border = BorderStroke(2.dp, Color.Gray),
-            shape = RoundedCornerShape(8.dp),
-
+            // Tabs for Charts
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = Color.Transparent,
+                contentColor = FormColors.green
             ) {
-            Text(
-                text = placeholder,
-                fontSize = 16.sp,
-                color = Color.Black,
-            )
-        }
-
-        // Dropdown menu
-        DropdownMenu(
-            expanded = scoresExpanded,
-            onDismissRequest = { scoresExpanded = false },
-            modifier = Modifier
-                .fillMaxWidth(0.7f)
-                .fillMaxHeight(0.7f)
-                .background(Color.White)
-        ) {
-            scoreTypes.forEach { type ->
-                DropdownMenuItem(
-                    text = { Text(type) },
-                    onClick = {
-                        selectedScoreType = type
-                        scoresExpanded = false
-                    }
-                )
+                Tab(selected = selectedTabIndex == 0, onClick = { selectedTabIndex = 0 }) {
+                    Text("Assessments", modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurface)
+                }
+                Tab(selected = selectedTabIndex == 1, onClick = { selectedTabIndex = 1 }) {
+                    Text("Health Surveys", modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurface)
+                }
+                Tab(selected = selectedTabIndex == 2, onClick = { selectedTabIndex = 2 }) {
+                    Text("Mini Games", modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurface)
+                }
             }
-        }
+            
+            Spacer(Modifier.height(16.dp))
 
-        if (selectedScoreType.isNotEmpty()) {
-            // Fetch user scores when a user is selected
-            LaunchedEffect(selectedScoreType) {
-                placeholder = selectedScoreType
-                userId?.let { userId ->
-                    isLoading = true
-
-                    when (selectedScoreType) {
-                        "Total Scores" -> {
-                            cognitiveAssessmentService.getUserScores(userId) { result ->
-                                handleResult(result)
-                            }
+            when (selectedTabIndex) {
+                0 -> {
+                    if (assessmentResults.isNotEmpty()) {
+                        UserTestResults(GraphableAttempts(assessmentResults))
+                    } else {
+                        NoDataMessage()
+                    }
+                }
+                1 -> {
+                    if (surveyResults.isNotEmpty()) {
+                        UserTestResults(GraphableAttempts(surveyResults))
+                    } else {
+                        NoDataMessage()
+                    }
+                }
+                2 -> {
+                    // Game Sub-tabs
+                    ScrollableTabRow(
+                        selectedTabIndex = selectedGameTab,
+                        containerColor = Color.Transparent,
+                        edgePadding = 0.dp
+                    ) {
+                        Tab(selected = selectedGameTab == 0, onClick = { selectedGameTab = 0 }) {
+                            Text("Complex Attention", modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSurface)
                         }
-                        "Health Survey" -> {
-                            healthSurveyService.getUserScores(userId) {result ->
-                                handleResult(result)
-                            }
+                        Tab(selected = selectedGameTab == 1, onClick = { selectedGameTab = 1 }) {
+                            Text("Executive Function", modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSurface)
                         }
-                        "Complex Attention" -> {
-                            miniGameScoresService.getUserGameAttempts(userId, GameType.COMPLEX_ATTENTION) { result ->
-                                handleResult(result)
-                            }
+                        Tab(selected = selectedGameTab == 2, onClick = { selectedGameTab = 2 }) {
+                            Text("Learning & Memory", modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onSurface)
                         }
-                        "Executive Function" -> {
-                            miniGameScoresService.getUserGameAttempts(userId, GameType.EXECUTIVE_FUNCTION) { result ->
-                                handleResult(result)
-                            }
-                        }
-                        "Learning and Memory" -> {
-                            miniGameScoresService.getUserGameAttempts(userId, GameType.LEARNING_AND_MEMORY) { result ->
-                                handleResult(result)
-                            }
-                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    
+                    val currentGames = when(selectedGameTab) {
+                        0 -> gameResultsCA
+                        1 -> gameResultsEF
+                        else -> gameResultsLM
+                    }
+                    
+                    if (currentGames.isNotEmpty()) {
+                        UserTestResults(GraphableAttempts(currentGames))
+                    } else {
+                        NoDataMessage()
                     }
                 }
             }
-            // Display loading indicator
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    LoadingSpinner()
-                }
-            }
-            // Display scores if available
-            else if (hasScores) {
-                // Show summary for Cognitive Assessment and Health Survey
-                if (selectedScoreType == "Total Scores" || selectedScoreType == "Health Survey") {
-                    val latestAttempt = results.filterIsInstance<UserAttempts>().lastOrNull()
-                    latestAttempt?.let {
-                        ProgressSummary(it)
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
-
-                UserTestResults(GraphableAttempts(results))
-            }
-            // Display message if no scores are available
-            else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = errorMessage,
-                        fontSize = 16.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+            
+            Spacer(Modifier.height(24.dp))
         }
     }
 }
+
+@Composable
+fun StatisticCard(title: String, value: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.height(100.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(8.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(value, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = FormColors.green)
+            Spacer(Modifier.height(4.dp))
+            Text(title, fontSize = 12.sp, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+fun NoDataMessage() {
+    Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+        Text("No data available yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
