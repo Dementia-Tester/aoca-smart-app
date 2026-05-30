@@ -18,6 +18,7 @@ data class UserSettings(
     val dataSharing:           Boolean = false,
     val syncWithCloud:         Boolean = true,
     val darkMode:              Boolean = false
+
 ) {
     fun toMap(): Map<String, Any> = mapOf(
         "textSize"             to textSize,
@@ -57,7 +58,6 @@ data class UserSettings(
         }
     }
 }
-
 /**
  * Expect class - load/save UserSettings from Firebase.
  * Fixes issue #11 (settings reset on every app restart).
