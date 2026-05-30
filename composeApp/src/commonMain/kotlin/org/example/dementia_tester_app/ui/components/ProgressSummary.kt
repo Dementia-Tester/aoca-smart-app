@@ -1,5 +1,7 @@
 package org.example.dementia_tester_app.ui.components
 
+
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -26,7 +28,7 @@ fun ProgressSummary(latestAttempt: UserAttempts) {
             .fillMaxWidth()
             .padding(vertical = 16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -151,3 +153,4 @@ fun DomainProgressBar(label: String, score: Int, maxScore: Int) {
         )
     }
 }
+
