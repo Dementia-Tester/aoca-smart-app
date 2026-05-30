@@ -35,6 +35,7 @@ import org.example.dementia_tester_app.auth.AuthService
 import org.example.dementia_tester_app.auth.AuthResult
 import org.example.dementia_tester_app.data.DatabaseResult
 import org.example.dementia_tester_app.data.UserProfileService
+import org.example.dementia_tester_app.data.UserProfile
 import org.example.dementia_tester_app.data.UserType
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -46,27 +47,45 @@ import kotlinx.datetime.toInstant
 
 @Composable
 fun App() {
-    MaterialTheme {
+    val settingsService = remember { UserSettingsService() }
+    var userSettings by remember { mutableStateOf(org.example.dementia_tester_app.data.UserSettings()) }
+    var hasLoadedSettings by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        settingsService.loadSettings { result ->
+            if (result is DatabaseResult.Success) {
+                userSettings = result.data
+            }
+            hasLoadedSettings = true
+        }
+    }
+
+    org.example.dementia_tester_app.ui.theme.DementiaTesterTheme(darkTheme = userSettings.darkMode) {
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
         val authService = remember { AuthService() }
         val userProfileService = remember { UserProfileService() }
         
+        // State to track the user type
         var userType by remember { mutableStateOf(UserType.USER) }
+        // Function to get the current dashboard type based on user type
         val getDashboardType = { 
             when(userType) {
                 UserType.DOCTOR -> "DoctorDashboard"
                 else -> "Dashboard"
             }
         }
-        
+        // State to track if we're currently loading user profile
         var isLoadingProfile by remember { mutableStateOf(false) }
+        // State to store the user's email for verification
         var userEmail by remember { mutableStateOf("") }
         var profileRefreshKey by remember { mutableStateOf(0) }
 
         var currentScreen by remember { 
             mutableStateOf(
                 if (authService.isUserSignedIn()) {
+                    // If user is already signed in, we'll need to load their profile
+                    // to determine which dashboard to show
                     isLoadingProfile = true
                     "Loading"
                 } else {
@@ -74,8 +93,9 @@ fun App() {
                 }
             )
         }
+        
 
-        // Health Survey Reminder Logic
+        // Schedule the Health Survey reminder for every Sunday at 6 PM local time
         LaunchedEffect(Unit) {
             val mgr = NotificationManagerProvider.getNotificationManager()
             val helper = ReminderHelper(LocalNotificationManagerAdapter(mgr))
@@ -106,25 +126,30 @@ fun App() {
                 return targetLocal.toInstant(tz).toEpochMilliseconds()
             }
 
+            val utcAt = nextSunday6pmUtcMillis()
+            // Use a stable ID so re-opening the app updates the schedule instead of duplicating
             helper.upsertAt(
                 id = ReminderIds.healthSurvey("weekly"),
                 message = "It's time for your weekly health survey.",
-                utcMillis = nextSunday6pmUtcMillis(),
+                utcMillis = utcAt,
                 policy = ReminderPolicy(channel = ReminderChannels.HEALTH, allowAfterReboot = true)
             )
+            println("Weekly health survey scheduled for $utcAt")
         }
 
-        // Profile Loading Effect
+
+        // Effect to load user profile when signed in or when loading profile state changes
         LaunchedEffect(authService.isUserSignedIn(), isLoadingProfile) {
             if (authService.isUserSignedIn() && isLoadingProfile) {
+                // Load user profile first to determine user type and verification needs
                 userProfileService.getCurrentUserProfile { result ->
                     when (result) {
                         is DatabaseResult.Success -> {
                             userEmail = result.data.email
                             userType = result.data.userType
                             
-                            // Check for Google User or verified email
-                            if (authService.isEmailVerified() || userEmail == "Google User") {
+                            // Bypass email verification if already verified
+                            if (authService.isEmailVerified()) {
                                 currentScreen = getDashboardType()
                             } else {
                                 currentScreen = "EmailVerification"
@@ -132,8 +157,10 @@ fun App() {
                         }
                         is DatabaseResult.Error -> {
                             if (result.message.contains("Profile not found", ignoreCase = true)) {
+                                // If profile is not found, redirect to Profile screen to complete registration
                                 currentScreen = "Profile"
                             } else {
+                                // For other errors (e.g., network), sign out and return to login
                                 authService.signOut()
                                 currentScreen = "Login"
                             }
@@ -150,23 +177,45 @@ fun App() {
                     Login(
                         onLogin = { email ->
                             userEmail = email
-                            if (email == "Google User" || authService.isEmailVerified()) {
+                            if (!authService.isEmailVerified()) {
+                                authService.reloadUser { result ->
+                                    when (result) {
+                                        is AuthResult.Success -> {
+                                            if (authService.isEmailVerified()) {
+                                                isLoadingProfile = true
+                                                currentScreen = "Loading"
+                                            } else {
+                                                currentScreen = "EmailVerification"
+                                            }
+                                        }
+                                        is AuthResult.Error -> {
+                                            currentScreen = "EmailVerification"
+                                        }
+                                    }
+                                }
+                            } else {
                                 isLoadingProfile = true
                                 currentScreen = "Loading"
-                            } else {
-                                currentScreen = "EmailVerification"
                             }
                         },
-                        onSignUp = { currentScreen = "SignUp" },
-                        onForgotPassword = { currentScreen = "ForgotPassword" }
+                        onSignUp = {
+                            currentScreen = "SignUp"
+                        },
+                        onForgotPassword = {
+                            currentScreen = "ForgotPassword"
+                        }
                     )
                 }
                 "SignUp" -> {
                     SignUp(
-                        onBack = { currentScreen = "Login" },
+                        onBack = {
+                            currentScreen = "Login"
+                        },
                         onSignUpSuccess = { email ->
                             userEmail = email
-                            authService.sendEmailVerification { currentScreen = "EmailVerification" }
+                            authService.sendEmailVerification { result ->
+                                currentScreen = "EmailVerification"
+                            }
                         }
                     )
                 }
@@ -177,46 +226,104 @@ fun App() {
                             isLoadingProfile = true
                             currentScreen = "Loading"
                         },
-                        onBack = { currentScreen = "Login" }
+                        onBack = {
+                            currentScreen = "Login"
+                        }
                     )
                 }
                 "ForgotPassword" -> {
-                    ForgotPassword(onBack = { currentScreen = "Login" })
+                    ForgotPassword(
+                        onBack = {
+                            currentScreen = "Login"
+                        }
+                    )
                 }
                 "Loading" -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
                         LoadingSpinner()
                     }
                 }
             }
         } else {
+            // For all other screens, use the navigation drawer and page layout
             ModalNavigationDrawer(
                 drawerState = drawerState,
                 drawerContent = {
                     AppMenuContent(
                         onMenuItemClick = { menuItem ->
-                            currentScreen = if (menuItem == "Dashboard" && userType == UserType.DOCTOR) "DoctorDashboard" else menuItem
-                            scope.launch { drawerState.close() }
+                            currentScreen = when {
+                                menuItem == "Dashboard" && userType == UserType.DOCTOR -> "DoctorDashboard"
+                                else -> menuItem
+                            }
+
+                            scope.launch {
+                                drawerState.close()
+                            }
                         },
                         refreshKey = profileRefreshKey
                     )
                 }
             ) {
-                PageLayout(drawerState = drawerState, title = if (currentScreen == "DoctorDashboard") "Dashboard" else currentScreen) {
+                // Use PageLayout to display the current screen
+                PageLayout(
+                    drawerState = drawerState,
+                    title = when(currentScreen) {
+                        "DoctorDashboard" -> "Dashboard"
+                        else -> currentScreen
+                    }
+                ) {
+                    // Display the appropriate screen based on the currentScreen
                     when (currentScreen) {
                         "Dashboard" -> Dashboard()
                         "DoctorDashboard" -> DoctorDashboard()
-                        "Health Survey" -> HealthSurvey(onBackToDashboard = { currentScreen = getDashboardType() })
+                        "Health Survey" -> HealthSurvey(
+                            onBackToDashboard = {
+                                currentScreen = getDashboardType()
+                            }
+                        )
                         "Activities" -> Activities()
-                        "Book Appointment" -> BookAppointment(onCancel = { currentScreen = getDashboardType() })
+                        "Book Appointment" -> BookAppointment(
+                            onCancel = {
+                                currentScreen = getDashboardType()
+                            },
+                            onSuccess = {
+                                currentScreen = "Appointment History"
+                            }
+                        )
                         "Appointment History" -> AppointmentHistory()
                         "Contact" -> Contact()
                         "Chat" -> Chat()
-                        "Settings" -> Settings(onAccountDeleted = { authService.signOut(); userType = UserType.USER; currentScreen = "Login" })
+                        "Settings" -> Settings(
+                            onAccountDeleted = {
+                                authService.signOut()
+                                userType = UserType.USER
+                                currentScreen = "Login"
+                            }
+                        )
                         "Help" -> Help()
-                        "Profile" -> Profile(onBack = { profileRefreshKey++; isLoadingProfile = true; currentScreen = "Loading" })
-                        "logout" -> { authService.signOut(); userType = UserType.USER; currentScreen = "Login" }
-                        else -> { currentScreen = if (authService.isUserSignedIn()) getDashboardType() else "Login" }
+                        "Profile" -> Profile(
+                            onBack = {
+                                profileRefreshKey++
+                                isLoadingProfile = true
+                                currentScreen = "Loading"
+                            }
+                        )
+                        "logout" -> {
+                            authService.signOut()
+                            // Reset userType to default when logging out
+                            userType = UserType.USER
+                            currentScreen = "Login"
+                        }
+                        else -> {
+                            currentScreen = if (authService.isUserSignedIn()) {
+                                getDashboardType()
+                            } else {
+                                "Login"
+                            }
+                        }
                     }
                 }
             }
