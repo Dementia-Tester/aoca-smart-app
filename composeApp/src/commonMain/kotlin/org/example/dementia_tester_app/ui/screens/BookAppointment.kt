@@ -2,6 +2,8 @@ package org.example.dementia_tester_app.ui.screens
 
 
 
+
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.background
 
 import androidx.compose.foundation.border
@@ -192,7 +194,7 @@ fun validateAppointmentFields(
 
 /**
 
- * Book Appointment screen — wired to Firebase Realtime DB (issues #18, #24).
+ * Book Appointment screen â€” wired to Firebase Realtime DB (issues #18, #24).
 
  *
 
@@ -202,7 +204,7 @@ fun validateAppointmentFields(
 
 @Composable
 
-fun BookAppointment(onCancel: () -> Unit = {}) {
+fun BookAppointment(onCancel: () -> Unit = {}, onSuccess: () -> Unit = {}) {
 
     val doctors = listOf(
 
@@ -210,6 +212,14 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
 
         "Dr. Emily Rodriguez", "Dr. David Kim", "Dr. Jessica Patel"
 
+    )
+
+    val doctorEmails = mapOf(
+        "Dr. Sarah Johnson" to "sarah.johnson@example.com",
+        "Dr. Michael Chen" to "michael.chen@example.com",
+        "Dr. Emily Rodriguez" to "emily.rodriguez@example.com",
+        "Dr. David Kim" to "david.kim@example.com",
+        "Dr. Jessica Patel" to "jessica.patel@example.com"
     )
 
     val appointmentService = remember { AppointmentService() }
@@ -302,11 +312,11 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
 
     ) {
 
-        // ── Doctor ──────────────────────────────────────────────────
+        // â”€â”€ Doctor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
 
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
 
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
 
@@ -328,11 +338,11 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
 
 
 
-        // ── Appointment Type ────────────────────────────────────────
+        // â”€â”€ Appointment Type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
 
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
 
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
 
@@ -376,11 +386,11 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
 
 
 
-        // ── Date & Time ─────────────────────────────────────────────
+        // â”€â”€ Date & Time â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
 
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
 
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
 
@@ -442,11 +452,11 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
 
 
 
-        // ── Reason ──────────────────────────────────────────────────
+        // â”€â”€ Reason â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
 
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
 
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
 
@@ -490,7 +500,7 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
 
 
 
-        // ── Buttons ─────────────────────────────────────────────────
+        // â”€â”€ Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
 
@@ -564,7 +574,7 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
 
                         patientEmail = currentUserProfile?.email ?: "",
 
-                        doctorEmail = "pratik.poudel77@gmail.com" // Default admin/doctor email for notifications
+                        doctorEmail = doctorEmails[selectedDoctor] ?: "pratik.poudel77@gmail.com" // Default admin/doctor email for notifications
 
                     )
 
@@ -612,13 +622,12 @@ fun BookAppointment(onCancel: () -> Unit = {}) {
 
                                 
 
-                                // REDIRECT FLOW: Wait a brief moment to show success message, then navigate back
-
+                                // REDIRECT FLOW: Wait a brief moment to show success message, then navigate to History
                                 CoroutineScope(Dispatchers.Main).launch {
 
                                     delay(1000)
 
-                                    onCancel() 
+                                    onSuccess() 
 
                                 }
 
