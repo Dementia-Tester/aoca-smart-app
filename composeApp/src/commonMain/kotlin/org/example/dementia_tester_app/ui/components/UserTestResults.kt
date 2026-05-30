@@ -32,7 +32,7 @@ import org.example.dementia_tester_app.utils.computeMLPrediction
 import kotlin.math.max
 import kotlin.math.min
 
-//───── Constants ───────────────────────────────────────────────────────────────────────────
+//  ────── Constants ────────────────────────────────────────────────────────────────────────────────────
 
 private object ChartColors {
     val USER_1_LINE = Color(0xFFE57373)
@@ -70,7 +70,7 @@ private object TextSizes {
     val DETAIL = 14.sp
 }
 
-//───────── Shared Helpers ───────────────────────────────────────────────────────────────────────────
+//──────── Shared Helpers ────────────────────────────────────────────────────────────────────────────────────────
 
 /**
  * Calculates pixel positions for each score to be plotted on a chart.
@@ -140,7 +140,7 @@ private fun XAxisLabels(count: Int, startIndex: Int = 0, labelStep: Int = 1) {
                     text = (i + startIndex + 1).toString(),
                     fontSize = ChartDims.X_LABEL_FONT,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = ChartDims.X_LABEL_TOP)
                 )
             } else {
@@ -174,7 +174,7 @@ private fun filterAttempts(
     else -> attempts to 0
 }
 
-//────── Card Composables ───────────────────────────────────────────────────────────────────────────
+//───── Card Composables ────────────────────────────────────────────────────────────────────────────────────────
 
 /**
  * Displays a card with an overview of test results for a specific attempt.
@@ -441,7 +441,8 @@ private fun MiniGameAttemptDetails(
     }
 }
 
-//─────── Chart Components ───────────────────────────────────────────────────────────────────────────
+//──────── Chart Components ──────────────────────────────────────────────────────────────────
+
 /**
  * Displays a line graph showing total scores for a single user's test or game attempts.
  * Each point on the graph is clickable to view detailed information.
@@ -694,7 +695,7 @@ private fun ComparativeScoreLineGraph(
     }
 }
 
-//───────────────────────── Main Container ──────────────────────────────────────────────────
+//────── Main Container ────────────────────────────────────────────────────────────────────────────────────────
 
 /**
  * Main component for displaying user test results with interactive charts and detailed information.
