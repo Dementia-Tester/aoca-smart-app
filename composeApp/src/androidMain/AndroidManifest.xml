@@ -18,7 +18,7 @@
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
             android:exported="true"
-            android:name=".MainActivity">
+            android:name="org.example.dementia_tester_app.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -27,8 +27,8 @@
         </activity>
         
         <!-- Receiver for handling notification alarms -->
-        <receiver 
-            android:name=".notifications.NotificationReceiver" 
+        <receiver
+            android:name="org.example.dementia_tester_app.notifications.NotificationReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="org.example.dementia_tester_app.SHOW_NOTIFICATION" />
@@ -37,7 +37,7 @@
             
         <!-- Receiver for handling device reboots -->
         <receiver
-            android:name=".notifications.BootReceiver"
+            android:name="org.example.dementia_tester_app.notifications.BootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -46,7 +46,7 @@
         
         <!-- Receiver for handling exact alarm permission changes (Android 12+) -->
         <receiver
-            android:name=".notifications.ExactAlarmPermissionReceiver"
+            android:name="org.example.dementia_tester_app.notifications.ExactAlarmPermissionReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />

@@ -44,6 +44,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.toInstant
+import org.example.dementia_tester_app.data.UserSettingsService
 
 @Composable
 fun App() {

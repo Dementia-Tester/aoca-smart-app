@@ -121,7 +121,9 @@ fun Settings(onAccountDeleted: () -> Unit) {
                 FormToggle("Screen Reader", settings.screenReader,
                     onCheckedChange = { save(settings.copy(screenReader = it)) })
                 FormToggle("Reduce Motion", settings.reduceMotion,
-                     FormToggle("Dark Mode", settings.darkMode,
+                    onCheckedChange = { save(settings.copy(reduceMotion = it)) })
+
+                FormToggle("Dark Mode", settings.darkMode,
                     onCheckedChange = { save(settings.copy(darkMode = it)) })
                 FormToggle("Color Blind Mode", settings.colorBlindMode,
                     onCheckedChange = { save(settings.copy(colorBlindMode = it)) })
