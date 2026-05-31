@@ -10,7 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
+import androidx.compose.material3.* // Includes MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -165,8 +165,8 @@ fun ChatListScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = FormColors.green,
                 unfocusedBorderColor = FormColors.green,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             ),
             singleLine = true
         )
@@ -277,8 +277,8 @@ fun ChatConversationScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = FormColors.green,
                     unfocusedBorderColor = FormColors.green,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
 
@@ -318,7 +318,7 @@ fun ChatBubble(message: ChatMessage) {
         ) {
             Text(
                 text = message.text,
-                color = if (message.isFromUser) Color.White else Color.Black,
+                color = if (message.isFromUser) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp
             )
         }
@@ -347,7 +347,7 @@ fun ChatListItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable { onChatClick() },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -391,7 +391,7 @@ fun ChatListItem(
                     ) {
                         Text(
                             text = chat.unreadCount.toString(),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.surface,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
