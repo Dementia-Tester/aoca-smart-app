@@ -140,7 +140,7 @@ private fun XAxisLabels(count: Int, startIndex: Int = 0, labelStep: Int = 1) {
                     text = (i + startIndex + 1).toString(),
                     fontSize = ChartDims.X_LABEL_FONT,
                     fontWeight = FontWeight.Bold,
-                     color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = ChartDims.X_LABEL_TOP)
                 )
             } else {
@@ -716,7 +716,7 @@ fun UserTestResults(
 ) {
     val isComparison = results2 != null && user1Name != null && user2Name != null
     val all1 = results.attempts
-    val all2 = if (isComparison) results2.flatMap { it.attempts } else emptyList()
+    val all2 = if (isComparison) results2!!.flatMap { it.attempts } else emptyList()
     if (all1.isEmpty() && (!isComparison || all2.isEmpty())) return
 
     var selUser by remember { mutableStateOf<Int?>(null) }
@@ -784,7 +784,8 @@ fun UserTestResults(
                                 Text(
                                     text = opt,
                                     textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             },
                             onClick = { filterOpt = opt; expanded = false },
