@@ -45,7 +45,8 @@ fun QuizSummary(
                     text = "Attempt Summary",
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface // Applied change
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
@@ -64,7 +65,7 @@ fun QuizSummary(
                             .fillMaxWidth()
                             .padding(vertical = 8.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White
+                            containerColor = MaterialTheme.colorScheme.surface // Applied change
                         )
                     ) {
                         Column(
@@ -82,7 +83,8 @@ fun QuizSummary(
 
                             Text(
                                 text = question.questionText,
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface // Applied change
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -92,19 +94,22 @@ fun QuizSummary(
                                     Text(
                                         text = "Your answers:",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface // Applied change
                                     )
                                     if (question.selectedAnswers.isEmpty()) {
                                         Text(
                                             text = "Not answered",
-                                            style = MaterialTheme.typography.bodyMedium
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface // Applied change
                                         )
                                     } else {
                                         question.selectedAnswers.forEach { answer ->
                                             Text(
                                                 text = "• $answer",
                                                 style = MaterialTheme.typography.bodyMedium,
-                                                modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                                                modifier = Modifier.padding(start = 8.dp, top = 4.dp),
+                                                color = MaterialTheme.colorScheme.onSurface // Applied change
                                             )
                                         }
                                     }
@@ -112,7 +117,7 @@ fun QuizSummary(
                                     Text(
                                         text = "Score: ${question.score}",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.Gray
+                                        color = Color.Gray // Kept as Gray for secondary info
                                     )
                                 }
                             } else {
@@ -121,18 +126,21 @@ fun QuizSummary(
                                         Text(
                                             text = "Your answer: ",
                                             style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Bold
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface // Applied change
                                         )
                                         Text(
                                             text = question.selectedAnswer ?: "Not answered",
-                                            style = MaterialTheme.typography.bodyMedium
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface // Applied change
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
                                         text = "Score: ${question.score}",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface // Applied change
                                     )
                                 }
                             }
@@ -146,7 +154,7 @@ fun QuizSummary(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface) // Applied change
                     .padding(12.dp)
             ) {
                 Button(
@@ -154,7 +162,7 @@ fun QuizSummary(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = FormColors.green,
-                        contentColor = Color.White
+                        contentColor = MaterialTheme.colorScheme.surface // Applied change (mapped from White)
                     )
                 ) {
                     Text("Finish")
