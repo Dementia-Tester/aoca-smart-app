@@ -45,6 +45,7 @@ fun AppointmentHistory() {
         if (selectedAppointment == null) {
             // ── List / loading / empty / error ───────────────────────
             Text("Appointment History", fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 16.dp))
 
             when {
@@ -89,14 +90,15 @@ fun AppointmentHistory() {
 fun AppointmentItem(appointment: Appointment, onClick: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)) {
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Row(modifier = Modifier.padding(16.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(appointment.doctor, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(appointment.doctor, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
                 Text(appointment.type, color = Color.Gray, fontSize = 14.sp)
                 Text("${appointment.date} at ${appointment.time}", fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = 4.dp))
             }
             StatusBadge(status = appointment.status)
@@ -131,10 +133,10 @@ fun AppointmentDetailView(appointment: Appointment, onBack: () -> Unit) {
                 Text("< Back", color = FormColors.green, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.width(8.dp))
-            Text("Appointment Details", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Appointment Details", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         }
         Card(modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
             Column(Modifier.padding(16.dp)) {
                 DetailRow("Doctor", appointment.doctor)
@@ -142,12 +144,12 @@ fun AppointmentDetailView(appointment: Appointment, onBack: () -> Unit) {
                 DetailRow("Date",   appointment.date)
                 DetailRow("Time",   appointment.time)
                 Row(Modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Status: ", fontWeight = FontWeight.Bold, modifier = Modifier.width(100.dp))
+                    Text("Status: ", fontWeight = FontWeight.Bold, modifier = Modifier.width(100.dp), color = MaterialTheme.colorScheme.onSurface)
                     StatusBadge(status = appointment.status)
                 }
                 if (appointment.reason.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
-                    Text("Reason:", fontWeight = FontWeight.Bold)
+                    Text("Reason:", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Text(appointment.reason, modifier = Modifier.padding(top = 4.dp), color = Color.DarkGray)
                 }
             }
@@ -158,7 +160,7 @@ fun AppointmentDetailView(appointment: Appointment, onBack: () -> Unit) {
 @Composable
 fun DetailRow(label: String, value: String) {
     Row(Modifier.padding(vertical = 8.dp)) {
-        Text("$label:", fontWeight = FontWeight.Bold, modifier = Modifier.width(100.dp))
-        Text(value)
+        Text("$label:", fontWeight = FontWeight.Bold, modifier = Modifier.width(100.dp), color = MaterialTheme.colorScheme.onSurface)
+        Text(value, color = MaterialTheme.colorScheme.onSurface)
     }
 }
