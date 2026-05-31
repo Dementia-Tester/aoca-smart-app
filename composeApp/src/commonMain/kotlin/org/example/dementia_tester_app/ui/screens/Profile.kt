@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme // Added theme import
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -263,7 +264,7 @@ fun Profile(onBack: () -> Unit = {}) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) { // Apply surface color
         if (isLoading || isUploading) {
             LoadingSpinner()
         }
@@ -329,7 +330,7 @@ fun Profile(onBack: () -> Unit = {}) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Profile Icon",
-                            tint = Color.Black,
+                            tint = MaterialTheme.colorScheme.onSurface, // Use onSurface for icon tint
                             modifier = Modifier.size(70.dp)
                         )
                     }
@@ -340,6 +341,7 @@ fun Profile(onBack: () -> Unit = {}) {
                 text = "Your Details",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface, // Apply theme color
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
@@ -408,6 +410,7 @@ fun Profile(onBack: () -> Unit = {}) {
                     text = "Home Address",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface, // Apply theme color
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp, bottom = 8.dp)
@@ -432,7 +435,7 @@ fun Profile(onBack: () -> Unit = {}) {
             ) {
                 Text(
                     text = "Gender",
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface, // Apply theme color
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
@@ -469,6 +472,7 @@ fun Profile(onBack: () -> Unit = {}) {
                                 Text(
                                     text = option,
                                     style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface, // Apply theme color
                                     modifier = Modifier.padding(start = 16.dp)
                                 )
                             }
@@ -478,6 +482,7 @@ fun Profile(onBack: () -> Unit = {}) {
                     Text(
                         text = gender,
                         fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurface, // Apply theme color
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 8.dp)
@@ -495,6 +500,7 @@ fun Profile(onBack: () -> Unit = {}) {
                 text = "Emergency Contact",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface, // Apply theme color
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 24.dp, bottom = 16.dp)
@@ -667,6 +673,7 @@ fun ProfileField(label: String, value: String) {
         Text(
             text = value,
             fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface, // Apply theme color
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
