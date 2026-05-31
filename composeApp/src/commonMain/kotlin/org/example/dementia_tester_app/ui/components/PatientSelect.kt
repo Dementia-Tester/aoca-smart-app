@@ -69,14 +69,18 @@ fun PatientSelect(
                 .fillMaxWidth()
                 .height(40.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color.White),
+                .background(MaterialTheme.colorScheme.surface), // Applied change
             border = BorderStroke(2.dp, Color.Gray),
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = MaterialTheme.colorScheme.surface, // Applied change
+                contentColor = MaterialTheme.colorScheme.onSurface // Applied change
+            )
         ) {
             Text(
                 text = selectedUserString ?: placeholder,
                 fontSize = 16.sp,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onSurface, // Applied change
             )
         }
 
@@ -87,7 +91,7 @@ fun PatientSelect(
             modifier = Modifier
                 .fillMaxWidth(0.7f)
                 .fillMaxHeight(0.7f)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.surface) // Applied change
         ) {
             // Search field at the top of the dropdown
             Column(modifier = Modifier.padding(8.dp)) {
@@ -95,9 +99,15 @@ fun PatientSelect(
                     value = searchText,
                     onValueChange = { searchText = it },
                     placeholder = { Text("Search patients") },
-                    modifier = Modifier.fillMaxWidth().background(Color.White),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface), // Applied change
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
             }
             
@@ -107,7 +117,8 @@ fun PatientSelect(
                     text = { 
                         Text(
                             text = userString,
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface // Applied change
                         ) 
                     },
                     onClick = {
