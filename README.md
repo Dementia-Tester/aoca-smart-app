@@ -143,3 +143,15 @@ Below are some helpful resources:
 - [Firebase docs](https://firebase.google.com/docs)
 - [Google Play console docs](https://play.google.com/console/about/guides/)
 
+## Testing and Quality Assurance
+
+Testing and QA documentation has been added for the project.
+
+Relevant files:
+
+- `TESTING.md`
+- `MANUAL_TEST_REPORT.md`
+- `KNOWN_ISSUES.md`
+- `docs/testing-screenshots/`
+
+The testing documentation covers authentication, user settings, Firebase-related workflows, profile, appointments, notifications, and general app navigation.
