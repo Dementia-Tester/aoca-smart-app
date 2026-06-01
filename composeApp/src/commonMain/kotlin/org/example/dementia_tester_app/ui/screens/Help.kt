@@ -31,6 +31,8 @@ fun Help() {
         // FAQ Section
         CollapsibleSection(
             title = "FAQ",
+            isExpanded = true,
+            onHeaderClick = {},
             content = {
                 Column {
                     Text(
@@ -65,6 +67,8 @@ fun Help() {
         // User Manual Section
         CollapsibleSection(
             title = "User Manual",
+            isExpanded = true,
+            onHeaderClick = {},
             content = {
                 Column {
                     Text(
@@ -85,6 +89,8 @@ fun Help() {
         // Emergency Help Section
         CollapsibleSection(
             title = "Emergency Help",
+            isExpanded = true,
+            onHeaderClick = {},
             content = {
                 Column {
                     Text(
@@ -104,6 +110,8 @@ fun Help() {
         // Feedback/Comments Section
         CollapsibleSection(
             title = "Feedback/Comments",
+            isExpanded = true,
+            onHeaderClick = {},
             content = {
                 Column {
                     Text(
@@ -123,6 +131,8 @@ fun Help() {
         // Contact Section
         CollapsibleSection(
             title = "Contact",
+            isExpanded = true,
+            onHeaderClick = {},
             content = {
                 Column {
                     Text(

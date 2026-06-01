@@ -57,7 +57,7 @@ fun CognitiveIntroductionScreen(
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surface
             )
         ) {
             Column(
@@ -108,7 +108,7 @@ fun CognitiveIntroductionScreen(
                 Column(modifier = Modifier.padding(start = 8.dp)) {
                     domains.forEach { domain ->
                         Text(
-                            text = "• $domain",
+                            text = "$domain",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -143,7 +143,7 @@ fun CognitiveIntroductionScreen(
                     .width(120.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.LightGray,
-                    contentColor = Color.Black
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
                 Text("Back")
@@ -233,7 +233,7 @@ fun QuestionsPage(
                 .padding(vertical = 4.dp)
                 .wrapContentHeight(),
             shape = RoundedCornerShape(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             QuestionComponent(
@@ -363,7 +363,7 @@ fun TestView() {
                     text = "Cognitive Assessment",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
                 // Card-like component with question:
@@ -568,3 +568,4 @@ fun TestView() {
         }
     }
 }
+

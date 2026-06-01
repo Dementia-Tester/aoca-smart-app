@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,7 +49,7 @@ fun ReminderCard(
             .clip(RoundedCornerShape(8.dp))
             .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface // Applied change
         ),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
@@ -60,8 +61,16 @@ fun ReminderCard(
                 .padding(12.dp)
         ) {
             Column {
-                Text(reminder.taskName ?: "", fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                Text("Time: ${reminder.taskTime}")
+                Text(
+                    text = reminder.taskName ?: "",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    color = MaterialTheme.colorScheme.onSurface // Applied change
+                )
+                Text(
+                    text = "Time: ${reminder.taskTime}",
+                    color = MaterialTheme.colorScheme.onSurface // Applied change
+                )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(
@@ -83,6 +92,7 @@ fun ReminderCard(
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.onSurface, // Applied change
                     modifier = Modifier
                         .clickable { onDelete(reminder.id!!) }
                         .padding(12.dp)

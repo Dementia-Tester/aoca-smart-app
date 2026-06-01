@@ -21,7 +21,6 @@ import org.example.dementia_tester_app.utils.validateFields
 import org.example.dementia_tester_app.utils.isValidEmail
 
 // Import the Google button we just created
-import com.aoca.dementiatester.auth.GoogleSignInScreen
 
 @Composable
 fun LoginIcon() {
@@ -202,16 +201,6 @@ fun Login(
         // ----------------------------------------------------
         // Step 4: Google OAuth Button Implementation
         // ----------------------------------------------------
-        GoogleSignInScreen(
-            onSignInSuccess = {
-                // On success, trigger the login callback to route to the Dashboard
-                onLogin("Google User") 
-            },
-            onSignInError = { errorMsg ->
-                // If it fails or is canceled, show the error in the UI
-                errorMessage = errorMsg
-                showErrorMessage = true
-            }
-        )
+
     }
 }

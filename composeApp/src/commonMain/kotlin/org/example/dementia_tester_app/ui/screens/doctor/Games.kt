@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme // Added this part
 import org.example.dementia_tester_app.ui.components.LoadingSpinner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,8 +39,7 @@ import org.example.dementia_tester_app.ui.components.PatientSelect
 /**
  * Games screen for doctors
  * Allows doctors to select a user and view their game scores
- * 
- * @param userList List of users in the format "Users name - Users email"
+ * * @param userList List of users in the format "Users name - Users email"
  * @param userMap Mapping between formatted user strings and UserProfile objects
  */
 @Composable
@@ -83,6 +83,7 @@ fun DoctorGamesScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface) // Added this part
             .padding(16.dp)
     ) {
         // Title
@@ -90,6 +91,7 @@ fun DoctorGamesScreen(
             text = "Patient Game Scores",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface, // Added this part
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -112,6 +114,7 @@ fun DoctorGamesScreen(
                 text = "Game Scores",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface, // Added this part
                 modifier = Modifier.padding(bottom = 8.dp, top = 8.dp)
             )
 
@@ -191,7 +194,8 @@ fun DoctorGamesScreen(
                         Text(
                             text = "No game scores available for this patient",
                             fontSize = 16.sp,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface // Added this part
                         )
                     }
                 }
@@ -207,7 +211,8 @@ fun DoctorGamesScreen(
                 Text(
                     text = "Please select a patient to view their game scores",
                     fontSize = 16.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface // Added this part
                 )
             }
         }
@@ -253,30 +258,35 @@ private fun GameResultsCard(gameResults: GameResult) {
                         Text(
                             text = "Total Attempts:",
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface // Added this part
                         )
                         Text(
                             text = "Last Played:",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface, // Added this part
                             modifier = Modifier.padding(top = 8.dp)
                         )
                         Text(
                             text = "Average Score:",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface, // Added this part
                             modifier = Modifier.padding(top = 8.dp)
                         )
                         Text(
                             text = "Minimum Score:",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface, // Added this part
                             modifier = Modifier.padding(top = 8.dp)
                         )
                         Text(
                             text = "Maximum Score:",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface, // Added this part
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
@@ -284,26 +294,31 @@ private fun GameResultsCard(gameResults: GameResult) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "${gameResults.totalAttempts}",
-                            fontSize = 14.sp
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface // Added this part
                         )
                         Text(
                             text = gameResults.lastPlayed,
                             fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface, // Added this part
                             modifier = Modifier.padding(top = 8.dp)
                         )
                         Text(
                             text = "${gameResults.averageScore}",
                             fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface, // Added this part
                             modifier = Modifier.padding(top = 8.dp)
                         )
                         Text(
                             text = "${gameResults.minScore}",
                             fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface, // Added this part
                             modifier = Modifier.padding(top = 8.dp)
                         )
                         Text(
                             text = "${gameResults.maxScore}",
                             fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface, // Added this part
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
@@ -348,7 +363,8 @@ private fun NoScoresCard(gameName: String) {
                 Text(
                     text = "No scores available for this game",
                     fontSize = 14.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurface // Added this part
                 )
             }
         }

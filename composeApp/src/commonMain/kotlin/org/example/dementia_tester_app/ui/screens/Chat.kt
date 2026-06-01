@@ -10,7 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
+import androidx.compose.material3.* // Includes MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,22 +20,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.dementia_tester_app.ui.components.FormColors
-
+import com.google.firebase.firestore.FirebaseFirestore
+import androidx.compose.runtime.snapshots.SnapshotStateList
+data class FirebaseChatMessage(
+    val chatName: String = "",
+    val text: String = "",
+    val isFromUser: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis()
+)
+private val sessionChats = mutableStateListOf(
+    ChatItem("Dr. Smith", "Your next appointment is scheduled for tomorrow at 10:00 AM.", "10:30 AM", 1),
+    ChatItem("Nurse Johnson", "How are you feeling today? Don't forget to take your medication.", "Yesterday", 0),
+    ChatItem("Caregiver Support", "We've sent you the resources we discussed during our last conversation.", "Jul 19", 3),
+    ChatItem("Memory Clinic", "Your test results have been uploaded to your profile.", "Jul 15", 0),
+    ChatItem("Medication Reminder", "It's time to take your evening medication.", "Jul 10", 0)
+)
+private val sessionMessages = mutableStateMapOf<String, SnapshotStateList<ChatMessage>>()
 @Composable
 fun Chat() {
     var searchQuery by remember { mutableStateOf("") }
     var selectedChat by remember { mutableStateOf<ChatItem?>(null) }
     var showContactPicker by remember { mutableStateOf(false) }
 
-    val chats = remember {
-        mutableStateListOf(
-            ChatItem("Dr. Smith", "Your next appointment is scheduled for tomorrow at 10:00 AM.", "10:30 AM", 1),
-            ChatItem("Nurse Johnson", "How are you feeling today? Don't forget to take your medication.", "Yesterday", 0),
-            ChatItem("Caregiver Support", "We've sent you the resources we discussed during our last conversation.", "Jul 19", 3),
-            ChatItem("Memory Clinic", "Your test results have been uploaded to your profile.", "Jul 15", 0),
-            ChatItem("Medication Reminder", "It's time to take your evening medication.", "Jul 10", 0)
-        )
-    }
+    val chats = sessionChats
 
     fun updateLastMessage(chatName: String, newMessage: String) {
         val index = chats.indexOfFirst { it.name == chatName }
@@ -165,8 +172,8 @@ fun ChatListScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = FormColors.green,
                 unfocusedBorderColor = FormColors.green,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
             ),
             singleLine = true
         )
@@ -220,10 +227,24 @@ fun ChatConversationScreen(
     var messageText by remember { mutableStateOf("") }
 
     val messages = remember(chat.name) {
-        mutableStateListOf(
-            ChatMessage(chat.lastMessage.ifBlank { "Start a new conversation." }, false)
-        )
+        val existingMessages = sessionMessages[chat.name]
+
+        if (existingMessages != null) {
+            mutableStateListOf<ChatMessage>().apply {
+                addAll(existingMessages)
+            }
+        } else {
+            mutableStateListOf(
+                ChatMessage(
+                    chat.lastMessage.ifBlank { "Start a new conversation." },
+                    false
+                )
+            ).also {
+                sessionMessages[chat.name] = it
+            }
+        }
     }
+
 
     Column(
         modifier = Modifier
@@ -277,8 +298,8 @@ fun ChatConversationScreen(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = FormColors.green,
                     unfocusedBorderColor = FormColors.green,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
 
@@ -289,6 +310,16 @@ fun ChatConversationScreen(
                     if (messageText.isNotBlank()) {
                         val sentMessage = messageText.trim()
                         messages.add(ChatMessage(sentMessage, true))
+                        sessionMessages[chat.name] = messages
+                        FirebaseFirestore.getInstance()
+                            .collection("messages")
+                            .add(
+                                FirebaseChatMessage(
+                                    chatName = chat.name,
+                                    text = sentMessage,
+                                    isFromUser = true
+                                )
+                            )
                         onMessageSent(chat.name, sentMessage)
                         messageText = ""
                     }
@@ -318,7 +349,7 @@ fun ChatBubble(message: ChatMessage) {
         ) {
             Text(
                 text = message.text,
-                color = if (message.isFromUser) Color.White else Color.Black,
+                color = if (message.isFromUser) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp
             )
         }
@@ -347,7 +378,7 @@ fun ChatListItem(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable { onChatClick() },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -391,7 +422,7 @@ fun ChatListItem(
                     ) {
                         Text(
                             text = chat.unreadCount.toString(),
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.surface,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )

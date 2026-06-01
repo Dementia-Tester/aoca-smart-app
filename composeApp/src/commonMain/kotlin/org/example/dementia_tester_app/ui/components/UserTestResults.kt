@@ -1,5 +1,7 @@
 package org.example.dementia_tester_app.ui.components
 
+
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -30,7 +32,7 @@ import org.example.dementia_tester_app.utils.computeMLPrediction
 import kotlin.math.max
 import kotlin.math.min
 
-//─── Constants ────────────────────────────────────────────────────────────────
+//  ────── Constants ────────────────────────────────────────────────────────────────────────────────────
 
 private object ChartColors {
     val USER_1_LINE = Color(0xFFE57373)
@@ -68,7 +70,7 @@ private object TextSizes {
     val DETAIL = 14.sp
 }
 
-//─── Shared Helpers ─────────────────────────────────────────────────────────
+//──────── Shared Helpers ────────────────────────────────────────────────────────────────────────────────────────
 
 /**
  * Calculates pixel positions for each score to be plotted on a chart.
@@ -138,7 +140,7 @@ private fun XAxisLabels(count: Int, startIndex: Int = 0, labelStep: Int = 1) {
                     text = (i + startIndex + 1).toString(),
                     fontSize = ChartDims.X_LABEL_FONT,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = ChartDims.X_LABEL_TOP)
                 )
             } else {
@@ -172,7 +174,7 @@ private fun filterAttempts(
     else -> attempts to 0
 }
 
-//─── Card Composables ───────────────────────────────────────────────────────
+//───── Card Composables ────────────────────────────────────────────────────────────────────────────────────────
 
 /**
  * Displays a card with an overview of test results for a specific attempt.
@@ -439,7 +441,7 @@ private fun MiniGameAttemptDetails(
     }
 }
 
-//─── Chart Components ────────────────────────────────────────────────────────
+//──────── Chart Components ──────────────────────────────────────────────────────────────────
 
 /**
  * Displays a line graph showing total scores for a single user's test or game attempts.
@@ -535,7 +537,7 @@ private fun ScoreLineGraph(
                     text = scores[i].toString(),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .offset(x = xDp + xOffset, y = yDp - ChartDims.LABEL_OFFSET.dp)
@@ -693,7 +695,7 @@ private fun ComparativeScoreLineGraph(
     }
 }
 
-//─── Main Container ──────────────────────────────────────────────────────────
+//────── Main Container ────────────────────────────────────────────────────────────────────────────────────────
 
 /**
  * Main component for displaying user test results with interactive charts and detailed information.
@@ -714,7 +716,7 @@ fun UserTestResults(
 ) {
     val isComparison = results2 != null && user1Name != null && user2Name != null
     val all1 = results.attempts
-    val all2 = if (isComparison) results2.flatMap { it.attempts } else emptyList()
+    val all2 = if (isComparison) results2!!.flatMap { it.attempts } else emptyList()
     if (all1.isEmpty() && (!isComparison || all2.isEmpty())) return
 
     var selUser by remember { mutableStateOf<Int?>(null) }
@@ -761,20 +763,20 @@ fun UserTestResults(
                         .fillMaxWidth()
                         .height(50.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White)
+                        .background(MaterialTheme.colorScheme.surface)
                         .border(
                             BorderStroke(2.dp, Color.Gray),
                             shape = RoundedCornerShape(8.dp)
                         ),
                     textStyle = LocalTextStyle.current.copy(
                         textAlign = TextAlign.Center,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     ),
                 )
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false },
-                    modifier = Modifier.background(Color.White)
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                 ) {
                     options.forEach { opt ->
                         DropdownMenuItem(
@@ -782,11 +784,12 @@ fun UserTestResults(
                                 Text(
                                     text = opt,
                                     textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             },
                             onClick = { filterOpt = opt; expanded = false },
-                            modifier = Modifier.background(Color.White)
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                         )
                     }
                 }

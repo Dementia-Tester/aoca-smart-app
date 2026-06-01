@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.dementia_tester_app.data.UserAttempts
 import org.example.dementia_tester_app.data.UserQuizType
-import org.example.dementia_tester_app.ui.components.FormColors
 
 @Composable
 fun ProgressSummary(latestAttempt: UserAttempts) {
@@ -26,7 +25,9 @@ fun ProgressSummary(latestAttempt: UserAttempts) {
             .fillMaxWidth()
             .padding(vertical = 16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface // Already correct, but enforced
+        )
     ) {
         Column(
             modifier = Modifier
@@ -37,7 +38,8 @@ fun ProgressSummary(latestAttempt: UserAttempts) {
                 text = if (latestAttempt.type == UserQuizType.CognitiveAssessment) "Assessment Summary" else "Survey Summary",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 16.dp),
+                color = MaterialTheme.colorScheme.onSurface // Applied change
             )
 
             // Overall progress bar
@@ -53,7 +55,8 @@ fun ProgressSummary(latestAttempt: UserAttempts) {
                     text = "Domain Breakdown",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    color = MaterialTheme.colorScheme.onSurface // Applied change
                 )
 
                 // Breakdown by domain
@@ -121,7 +124,8 @@ fun CircularProgressSection(percentage: Float, label: String) {
         Text(
             text = label,
             fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface // Applied change
         )
     }
 }
@@ -136,8 +140,17 @@ fun DomainProgressBar(label: String, score: Int, maxScore: Int) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = label, fontSize = 14.sp)
-            Text(text = "$score / $maxScore (${(percentage * 100).toInt()}%)", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(
+                text = label, 
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface // Applied change
+            )
+            Text(
+                text = "$score / $maxScore (${(percentage * 100).toInt()}%)", 
+                fontSize = 14.sp, 
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface // Applied change
+            )
         }
         Spacer(modifier = Modifier.height(4.dp))
         LinearProgressIndicator(

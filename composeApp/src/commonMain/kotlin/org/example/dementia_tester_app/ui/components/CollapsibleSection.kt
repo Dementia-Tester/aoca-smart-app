@@ -16,12 +16,11 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,25 +30,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.runtime.CompositionLocalProvider
 
-/**
- * A reusable collapsible section component
- *
- * @param title The title of the section
- * @param content The content to display when the section is expanded
- * @param initiallyExpanded Whether the section should be initially expanded (default: false)
- * @param modifier Additional modifier for the component
- */
 @Composable
 fun CollapsibleSection(
     title: String,
     content: @Composable () -> Unit,
-    initiallyExpanded: Boolean = false,
+    isExpanded: Boolean,
+    onHeaderClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isExpanded by remember { mutableStateOf(initiallyExpanded) }
+
     val rotationState by animateFloatAsState(
         targetValue = if (isExpanded) 180f else 0f,
         label = "rotation"
@@ -60,12 +50,11 @@ fun CollapsibleSection(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // Header
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .clickable { isExpanded = !isExpanded },
+                .clickable { onHeaderClick() },
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFF66BB45)
             )
@@ -84,6 +73,7 @@ fun CollapsibleSection(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f)
                 )
+
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = if (isExpanded) "Collapse" else "Expand",
@@ -93,7 +83,6 @@ fun CollapsibleSection(
             }
         }
 
-        // Content
         AnimatedVisibility(
             visible = isExpanded,
             enter = expandVertically(),

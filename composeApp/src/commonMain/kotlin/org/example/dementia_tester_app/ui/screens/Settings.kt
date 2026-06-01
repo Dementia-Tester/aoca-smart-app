@@ -55,31 +55,54 @@ fun Settings(onAccountDeleted: () -> Unit) {
 
     // ── Single consolidated state object (replaces 12 separate vars) ──
     var settings by remember { mutableStateOf(UserSettings()) }
+    var expandedSection by remember { mutableStateOf<String?>(null) }
+    var accountMessage           by remember { mutableStateOf<String?>(null) }
 
     // ── Load from Firebase once on screen open ─────────────────────
     LaunchedEffect(Unit) {
         settingsService.loadSettings { result ->
-            if (result is DatabaseResult.Success) settings = result.data
+            when (result) {
+                is DatabaseResult.Success -> {
+                    settings = result.data
+                    accountMessage = "Settings loaded successfully."
+                }
+
+                is DatabaseResult.Error -> {
+                    accountMessage = result.message
+                }
+            }
         }
     }
-
-    // Helper: save updated settings and update local state atomically
-    fun save(updated: UserSettings) {
-        settings = updated
-        settingsService.saveSettings(updated) { /* fire-and-forget; errors silently ignored */ }
-    }
-
-    // ── Dialog / password state ────────────────────────────────────
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog  by remember { mutableStateOf(false) }
     var newPassword              by remember { mutableStateOf("") }
     var confirmPassword          by remember { mutableStateOf("") }
-    var accountMessage           by remember { mutableStateOf<String?>(null) }
+
+
+    // Helper: save updated settings and update local state atomically
+    fun save(updated: UserSettings) {
+        settings = updated
+        settingsService.saveSettings(updated) { result ->
+            accountMessage = when (result) {
+                is DatabaseResult.Success -> "Settings saved successfully."
+                is DatabaseResult.Error -> result.message
+            }
+        }
+    }
+
+    // ── Dialog / password state ────────────────────────────────────
+
 
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
 
         // ── Accessibility ──────────────────────────────────────────
-        CollapsibleSection(title = "Accessibility", content = {
+        CollapsibleSection(
+            title = "Accessibility",
+            isExpanded = expandedSection == "Accessibility",
+            onHeaderClick = {
+                expandedSection = if (expandedSection == "Accessibility") null else "Accessibility"
+            },
+            content = {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 Text("Accessibility Options", fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp))
@@ -99,13 +122,23 @@ fun Settings(onAccountDeleted: () -> Unit) {
                     onCheckedChange = { save(settings.copy(screenReader = it)) })
                 FormToggle("Reduce Motion", settings.reduceMotion,
                     onCheckedChange = { save(settings.copy(reduceMotion = it)) })
+
+                FormToggle("Dark Mode", settings.darkMode,
+                    onCheckedChange = { save(settings.copy(darkMode = it)) })
                 FormToggle("Color Blind Mode", settings.colorBlindMode,
                     onCheckedChange = { save(settings.copy(colorBlindMode = it)) })
             }
-        })
+        }
+        )
 
         // ── Notifications ──────────────────────────────────────────
-        CollapsibleSection(title = "Notifications", content = {
+        CollapsibleSection(
+            title = "Notifications",
+            isExpanded = expandedSection == "Notifications",
+            onHeaderClick = {
+                expandedSection = if (expandedSection == "Notifications") null else "Notifications"
+            },
+            content = {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 Text("Notification Preferences", fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp))
@@ -122,10 +155,17 @@ fun Settings(onAccountDeleted: () -> Unit) {
                 FormToggle("Email Notifications", settings.emailNotifications,
                     onCheckedChange = { save(settings.copy(emailNotifications = it)) })
             }
-        })
+        }
+        )
 
         // ── Account ────────────────────────────────────────────────
-        CollapsibleSection(title = "Account", content = {
+        CollapsibleSection(
+            title = "Account",
+            isExpanded = expandedSection == "Account",
+            onHeaderClick = {
+                expandedSection = if (expandedSection == "Account") null else "Account"
+            },
+            content = {
             Column(modifier = Modifier.padding(vertical = 8.dp)) {
                 Text("Account Settings", fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp))
@@ -146,7 +186,15 @@ fun Settings(onAccountDeleted: () -> Unit) {
                         modifier = Modifier.padding(top = 8.dp))
                 }
             }
-        })
+        }
+        )
+        accountMessage?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
 
         Spacer(Modifier.height(16.dp))
     }

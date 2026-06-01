@@ -54,6 +54,7 @@ fun Activities() {
             text = "Daily Activities",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -65,6 +66,7 @@ fun Activities() {
             text = "Recent Activity",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -112,7 +114,11 @@ fun DailySummarySection(summary: Map<String, Int>?, isLoading: Boolean) {
             Spacer(modifier = Modifier.height(12.dp))
 
             if (isLoading) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -140,7 +146,8 @@ fun SummaryItem(label: String, count: Int, icon: ImageVector) {
         Text(
             text = count.toString(),
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
         )
         Text(
             text = label,
@@ -160,6 +167,7 @@ fun ActivityItem(activity: Activity) {
         else -> Icons.Default.History
     }
 
+    // Keeping these specific semantic colors but wrapping in Material logic if needed
     val iconColor = when (activity.type) {
         "game" -> Color(0xFF4CAF50)
         "test" -> Color(0xFF2196F3)
@@ -171,6 +179,7 @@ fun ActivityItem(activity: Activity) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -198,7 +207,8 @@ fun ActivityItem(activity: Activity) {
                 Text(
                     text = activity.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (activity.description.isNotEmpty()) {
                     Text(

@@ -56,7 +56,7 @@ fun RadioOption(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            color = if (selected) FormColors.green else Color.Black
+            color = if (selected) FormColors.green else MaterialTheme.colorScheme.onSurface // Applied change
         )
     }
 }
@@ -100,7 +100,7 @@ fun CheckboxOption(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            color = if (selected) FormColors.green else Color.Black
+            color = if (selected) FormColors.green else MaterialTheme.colorScheme.onSurface // Applied change
         )
     }
 }
@@ -123,7 +123,7 @@ fun QuestionComponent(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(max = 700.dp)
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface) // Applied change
             .clip(RoundedCornerShape(12.dp))
             .padding(8.dp)
             .verticalScroll(rememberScrollState())
@@ -137,7 +137,7 @@ fun QuestionComponent(
                 text = "Question $questionNumber of $totalQuestions",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onSurface // Applied change
             )
             Text(
                 text = question.domain,
@@ -151,7 +151,8 @@ fun QuestionComponent(
         Text(
             text = question.questionText,
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.onSurface // Applied change
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -163,7 +164,7 @@ fun QuestionComponent(
             }
 
             question.options.forEach { option ->
-                key(option, selectedOptions.contains(option)) {  // Force recomposition when selection changes
+                key(option, selectedOptions.contains(option)) {
                     CheckboxOption(
                         text = option,
                         selected = selectedOptions.contains(option),
@@ -185,7 +186,7 @@ fun QuestionComponent(
             var selectedOption by remember(question.id) { mutableStateOf(question.selectedAnswer) }
 
             question.options.forEach { option ->
-                key(option, selectedOption) {  // Force recomposition when selection changes
+                key(option, selectedOption) {
                     RadioOption(
                         text = option,
                         selected = option == selectedOption,
@@ -213,7 +214,7 @@ fun QuestionComponent(
                     .width(100.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.LightGray,
-                    contentColor = Color.Black
+                    contentColor = MaterialTheme.colorScheme.onSurface // Applied change
                 )
             ) {
                 Text("Back")
@@ -226,7 +227,7 @@ fun QuestionComponent(
                     .width(120.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Gray,
-                    contentColor = Color.White
+                    contentColor = MaterialTheme.colorScheme.surface // Applied change (White -> Surface)
                 )
             ) {
                 Text("Save & Exit")
@@ -239,7 +240,7 @@ fun QuestionComponent(
                     .width(100.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = FormColors.green,
-                    contentColor = Color.White
+                    contentColor = MaterialTheme.colorScheme.surface // Applied change (White -> Surface)
                 )
             ) {
                 Text("Next")

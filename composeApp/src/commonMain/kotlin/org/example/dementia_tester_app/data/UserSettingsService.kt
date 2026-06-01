@@ -16,7 +16,9 @@ data class UserSettings(
     val appUpdates:            Boolean = false,
     val emailNotifications:    Boolean = false,
     val dataSharing:           Boolean = false,
-    val syncWithCloud:         Boolean = true
+    val syncWithCloud:         Boolean = true,
+    val darkMode:              Boolean = false
+
 ) {
     fun toMap(): Map<String, Any> = mapOf(
         "textSize"             to textSize,
@@ -30,7 +32,8 @@ data class UserSettings(
         "appUpdates"           to appUpdates,
         "emailNotifications"   to emailNotifications,
         "dataSharing"          to dataSharing,
-        "syncWithCloud"        to syncWithCloud
+        "syncWithCloud"        to syncWithCloud,
+        "darkMode"             to darkMode
     )
 
     companion object {
@@ -49,17 +52,18 @@ data class UserSettings(
                 appUpdates           = bool("appUpdates",           false),
                 emailNotifications   = bool("emailNotifications",   false),
                 dataSharing          = bool("dataSharing",          false),
-                syncWithCloud        = bool("syncWithCloud",        true)
+                syncWithCloud        = bool("syncWithCloud",        true),
+                darkMode             = bool("darkMode",             false)
             )
         }
     }
 }
-
 /**
- * Expect class — load/save UserSettings from Firebase.
+ * Expect class - load/save UserSettings from Firebase.
  * Fixes issue #11 (settings reset on every app restart).
  */
 expect class UserSettingsService() {
     fun loadSettings(callback: (DatabaseResult<UserSettings>) -> Unit)
     fun saveSettings(settings: UserSettings, callback: (DatabaseResult<Unit>) -> Unit)
 }
+

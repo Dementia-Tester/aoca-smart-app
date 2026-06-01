@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme // Added import
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,7 +55,7 @@ fun IntroductionScreen(
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surface // Updated from Color.White
             )
         ) {
             Column(
@@ -106,7 +107,7 @@ fun IntroductionScreen(
                     .width(120.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.LightGray,
-                    contentColor = Color.Black
+                    contentColor = MaterialTheme.colorScheme.onSurface // Updated from Color.Black
                 )
             ) {
                 Text("Back")
@@ -119,7 +120,7 @@ fun IntroductionScreen(
                     .width(120.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = FormColors.green,
-                    contentColor = Color.White
+                    contentColor = MaterialTheme.colorScheme.surface // Updated from Color.White
                 )
             ) {
                 Text("Start")
@@ -433,7 +434,7 @@ fun HealthSurvey(
                         onClick = onBackToDashboard,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = FormColors.green,
-                            contentColor = Color.White
+                            contentColor = MaterialTheme.colorScheme.surface // Updated from Color.White
                         )
                     ) {
                         Text("Back to Dashboard")
@@ -458,7 +459,7 @@ fun HealthSurvey(
                         onClick = onBackToDashboard,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = FormColors.green,
-                            contentColor = Color.White
+                            contentColor = MaterialTheme.colorScheme.surface // Updated from Color.White
                         )
                     ) {
                         Text("Back to Dashboard")

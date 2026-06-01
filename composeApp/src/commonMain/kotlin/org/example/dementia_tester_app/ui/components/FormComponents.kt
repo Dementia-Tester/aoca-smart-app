@@ -87,8 +87,8 @@ fun FormTextField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = if (isError) FormColors.errorColor else FormColors.green,
                 unfocusedBorderColor = if (isError) FormColors.errorColor else FormColors.green,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
+                 focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                 errorBorderColor = FormColors.errorColor
             )
         )
