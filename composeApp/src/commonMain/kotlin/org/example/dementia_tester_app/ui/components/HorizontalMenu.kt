@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,7 +49,7 @@ fun HorizontalMenu(
                 text = item,
                 fontSize = 18.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) activeColor else Color.Black,
+                color = if (isSelected) activeColor else MaterialTheme.colorScheme.onSurface,
                 textDecoration = if (isSelected) TextDecoration.Underline else TextDecoration.None,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -61,6 +62,6 @@ fun HorizontalMenu(
         modifier = Modifier
             .fillMaxWidth()
             .height(1.dp)
-            .border(1.dp, Color.LightGray)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant)
     )
 }
