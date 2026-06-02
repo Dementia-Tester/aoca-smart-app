@@ -17,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -25,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -56,7 +56,7 @@ fun CollapsibleSection(
                 .clip(RoundedCornerShape(8.dp))
                 .clickable { onHeaderClick() },
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF66BB45)
+                containerColor = MaterialTheme.colorScheme.primary
             )
         ) {
             Row(
@@ -67,7 +67,7 @@ fun CollapsibleSection(
             ) {
                 Text(
                     text = title,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -77,7 +77,7 @@ fun CollapsibleSection(
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = if (isExpanded) "Collapse" else "Expand",
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.rotate(rotationState)
                 )
             }
@@ -93,7 +93,7 @@ fun CollapsibleSection(
                     .fillMaxWidth()
                     .padding(top = 1.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.surface
                 ),
                 shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp)
             ) {
