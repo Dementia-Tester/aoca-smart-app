@@ -1,39 +1,49 @@
 package org.example.dementia_tester_app.data
 
+import android.os.Build
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import android.util.Log
+import androidx.annotation.RequiresApi
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.toInstant
 
 /**
- * Android implementation of ActivityService using Firebase Firestore
+ * Android implementation of ActivityService using Firebase Realtime Database.
+ * Migrated from Firestore for consistency and to fix permission issues.
  */
 actual class ActivityService {
     private val auth = FirebaseAuth.getInstance()
-    private val firestore = Firebase.firestore
+    private val database = Firebase.database.reference
+    private val dbPath = "Activities"
     private val tag = "ActivityService"
 
-    private fun getActivitiesCollection() = 
+    private fun getUserActivitiesRef() = 
         auth.currentUser?.uid?.let { userId ->
-            firestore.collection("UserProfiles").document(userId).collection("activities")
+            database.child(dbPath).child(userId)
         }
 
     actual fun logActivity(activity: Activity, callback: (DatabaseResult<Unit>) -> Unit) {
-        val collection = getActivitiesCollection()
-        if (collection == null) {
+        val ref = getUserActivitiesRef()
+        if (ref == null) {
             callback(DatabaseResult.Error("No user is signed in"))
             return
         }
 
-        collection.add(activity.toMap())
+        val newActivityRef = ref.push()
+        val id = newActivityRef.key ?: ""
+        val activityWithId = activity.copy(id = id)
+
+        newActivityRef.setValue(activityWithId.toMap())
             .addOnSuccessListener {
                 Log.d(tag, "Activity logged: ${activity.title}")
                 callback(DatabaseResult.Success(Unit))
@@ -45,45 +55,39 @@ actual class ActivityService {
     }
 
     actual fun getActivitiesFlow(): Flow<List<Activity>> = callbackFlow {
-        val currentUser = auth.currentUser
-        val userId = currentUser?.uid
-        val collection = getActivitiesCollection()
+        val ref = getUserActivitiesRef()
         
-        if (collection == null) {
-            Log.e(tag, "getActivitiesFlow: No user signed in or collection is null")
+        if (ref == null) {
             trySend(emptyList())
             close()
             return@callbackFlow
         }
 
-        Log.d(tag, "Starting activities flow listener for UID: $userId")
-        val registration = collection
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    Log.e(tag, "Listen failed for UserProfiles/$userId/activities. This might be a permission issue. Error: ${e.message}", e)
-                    // We don't close the flow on a single error as it might be transient or recovered
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null) {
-                    Log.d(tag, "Received activities snapshot for $userId. Count: ${snapshot.size()}")
-                    val activities = snapshot.documents.mapNotNull { doc ->
-                        doc.data?.let { Activity.fromMap(it, doc.id) }
-                    }
-                    trySend(activities)
-                }
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val activities = snapshot.children.mapNotNull { child ->
+                    val data = child.value as? Map<String, Any?> ?: return@mapNotNull null
+                    Activity.fromMap(data, child.key ?: "")
+                }.sortedByDescending { it.timestamp.toEpochMilliseconds() }
+                trySend(activities)
             }
 
+            override fun onCancelled(error: DatabaseError) {
+                Log.e(tag, "Listen failed: ${error.message}")
+            }
+        }
+
+        ref.addValueEventListener(listener)
+
         awaitClose { 
-            Log.d(tag, "Closing activities flow listener for $userId")
-            registration.remove() 
+            ref.removeEventListener(listener) 
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     actual fun getTodaySummary(callback: (DatabaseResult<Map<String, Int>>) -> Unit) {
-        val collection = getActivitiesCollection()
-        if (collection == null) {
+        val ref = getUserActivitiesRef()
+        if (ref == null) {
             callback(DatabaseResult.Error("No user is signed in"))
             return
         }
@@ -92,25 +96,25 @@ actual class ActivityService {
         val tz = TimeZone.currentSystemDefault()
         val today = now.toLocalDateTime(tz).date
         
-        // Start of today in milliseconds
         val startOfToday = kotlinx.datetime.LocalDateTime(today.year, today.monthNumber, today.dayOfMonth, 0, 0)
-            .toInstant(TimeZone.UTC).toEpochMilliseconds()
+            .toInstant(tz).toEpochMilliseconds()
 
-        collection
-            .whereGreaterThanOrEqualTo("timestamp", startOfToday)
-            .get()
-            .addOnSuccessListener { snapshot ->
-                val summary = mutableMapOf<String, Int>()
-                summary["total"] = snapshot.size()
-                
-                snapshot.documents.forEach { doc ->
-                    val type = doc.getString("type") ?: "other"
+        ref.get().addOnSuccessListener { snapshot ->
+            val summary = mutableMapOf<String, Int>()
+            var total = 0
+            
+            snapshot.children.forEach { child ->
+                val timestamp = child.child("timestamp").value?.toString()?.toLongOrNull() ?: 0L
+                if (timestamp >= startOfToday) {
+                    total++
+                    val type = child.child("type").value?.toString() ?: "other"
                     summary[type] = summary.getOrDefault(type, 0) + 1
                 }
-                callback(DatabaseResult.Success(summary))
             }
-            .addOnFailureListener { e ->
-                callback(DatabaseResult.Error("Failed to get summary: ${e.message}"))
-            }
+            summary["total"] = total
+            callback(DatabaseResult.Success(summary))
+        }.addOnFailureListener { e ->
+            callback(DatabaseResult.Error("Failed to get summary: ${e.message}"))
+        }
     }
 }
