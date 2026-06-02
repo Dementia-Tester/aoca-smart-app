@@ -20,7 +20,14 @@ import org.example.dementia_tester_app.ui.components.LoadingSpinner
 import org.example.dementia_tester_app.utils.validateFields
 import org.example.dementia_tester_app.utils.isValidEmail
 
-// Import the Google button we just created
+/**
+ * Expect component for Google Sign In Button
+ */
+@Composable
+expect fun GoogleSignInButton(
+    onSignInSuccess: () -> Unit,
+    onSignInError: (String) -> Unit
+)
 
 @Composable
 fun LoginIcon() {
@@ -201,6 +208,15 @@ fun Login(
         // ----------------------------------------------------
         // Step 4: Google OAuth Button Implementation
         // ----------------------------------------------------
+        GoogleSignInButton(
+            onSignInSuccess = {
+                onLogin(authService.getCurrentUserEmail() ?: "")
+            },
+            onSignInError = { error ->
+                errorMessage = error
+                showErrorMessage = true
+            }
+        )
 
     }
 }
