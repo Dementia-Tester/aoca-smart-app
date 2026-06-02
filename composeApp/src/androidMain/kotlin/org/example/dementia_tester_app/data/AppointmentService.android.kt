@@ -3,9 +3,8 @@ package org.example.dementia_tester_app.data
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
 
 /**
  * Android actual — writes/reads appointments in Firebase Realtime DB.
@@ -13,7 +12,7 @@ import com.google.firebase.ktx.Firebase
  */
 actual class AppointmentService {
     private val auth = FirebaseAuth.getInstance()
-    private val database = Firebase.database.reference
+    private val database = FirebaseDatabase.getInstance().reference
     private val collectionPath = "Appointments"
 
     actual fun createAppointment(appointment: Appointment, callback: (DatabaseResult<Unit>) -> Unit) {
@@ -52,7 +51,6 @@ actual class AppointmentService {
                             val data = child.value as? Map<*, *> ?: continue
                             list.add(Appointment.fromMap(data, child.key ?: ""))
                         }
-                        // Sort by date/time locally if needed, or simply return
                         callback(DatabaseResult.Success(list))
                     } catch (e: Exception) {
                         callback(DatabaseResult.Error("Failed to parse appointments: ${e.message}"))
@@ -63,5 +61,20 @@ actual class AppointmentService {
                     callback(DatabaseResult.Error("Failed to load appointments: ${error.message}"))
                 }
             })
+    }
+
+    actual fun updateAppointmentStatus(appointmentId: String, newStatus: AppointmentStatus, callback: (DatabaseResult<Unit>) -> Unit) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            callback(DatabaseResult.Error("No user is signed in"))
+            return
+        }
+
+        database.child(collectionPath).child(userId).child(appointmentId).child("status")
+            .setValue(newStatus.name)
+            .addOnSuccessListener { callback(DatabaseResult.Success(Unit)) }
+            .addOnFailureListener { e ->
+                callback(DatabaseResult.Error("Failed to update status: ${e.message}"))
+            }
     }
 }
