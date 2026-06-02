@@ -302,6 +302,9 @@ fun App() {
                                 authService.signOut()
                                 userType = UserType.USER
                                 currentScreen = "Login"
+                            },
+                            onSettingsChanged = { updated ->
+                                userSettings = updated
                             }
                         )
                         "Help" -> Help()
@@ -331,4 +334,6 @@ fun App() {
         }
     }
 }
+
+
 
