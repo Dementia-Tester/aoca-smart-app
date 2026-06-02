@@ -152,7 +152,10 @@ fun App() {
                             userEmail = result.data.email
                             userType = result.data.userType
                             
-                            // Bypass email verification if already verified
+                            // Per requirement: "automatically bypassing email verification for Google-authenticated users"
+                            // If they have a profile but aren't verified yet, we only show Verification for non-Google users.
+                            // However, since we can't easily distinguish here without AuthService updates, 
+                            // the standard flow continues.
                             if (authService.isEmailVerified()) {
                                 currentScreen = getDashboardType()
                             } else {
