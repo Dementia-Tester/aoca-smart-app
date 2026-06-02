@@ -557,25 +557,15 @@ fun BookAppointment(onCancel: () -> Unit = {}, onSuccess: () -> Unit = {}) {
                     isSubmitting = true
 
                     val appt = Appointment(
-
                         doctor = selectedDoctor,
-
                         type = selectedAppointmentType,
-
                         date   = selectedDate,
-
                         time = selectedTime,
-
                         reason = reasonForAppointment,
-
                         status = AppointmentStatus.Upcoming,
-
                         patientName = currentUserProfile?.name ?: "Patient",
-
                         patientEmail = currentUserProfile?.email ?: "",
-
-                        doctorEmail = doctorEmails[selectedDoctor] ?: "pratik.poudel77@gmail.com" // Default admin/doctor email for notifications
-
+                        doctorEmail = doctorEmails[selectedDoctor] ?: ""
                     )
 
 
