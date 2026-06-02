@@ -30,7 +30,7 @@ fun AppHeader(
     val scope = rememberCoroutineScope()
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFF66BB23)
+        color = MaterialTheme.colorScheme.primary
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -49,14 +49,14 @@ fun AppHeader(
                     text = "☰",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
             Text(
                 text = title,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onPrimary,
             )
         }
     }
@@ -139,7 +139,7 @@ fun AppMenuContent(
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = "Profile Icon",
-                        tint = Color.Black,
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(70.dp)
                     )
                 }
