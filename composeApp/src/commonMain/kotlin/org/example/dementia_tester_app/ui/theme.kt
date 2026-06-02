@@ -11,26 +11,30 @@ import org.example.dementia_tester_app.ui.components.FormColors
 private val LightColorScheme = lightColorScheme(
     primary = FormColors.green,
     onPrimary = Color.White,
-    primaryContainer = FormColors.green,
-    onPrimaryContainer = Color.White,
+    primaryContainer = Color(0xFFE8F5E9),
+    onPrimaryContainer = Color(0xFF2E7D32),
     secondary = Color(0xFF03DAC5),
     background = Color(0xFFF5F5F5),
     surface = Color.White,
     onBackground = Color.Black,
     onSurface = Color.Black,
+    onSurfaceVariant = Color(0xFF666666),
+    outlineVariant = Color.LightGray,
     error = FormColors.errorColor
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = FormColors.green,
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFF1E1E1E),
-    onPrimaryContainer = Color.White,
+    primary = Color(0xFF81C784),
+    onPrimary = Color.Black,
+    primaryContainer = Color(0xFF1B5E20),
+    onPrimaryContainer = Color(0xFFE8F5E9),
     secondary = Color(0xFF03DAC5),
     background = Color(0xFF121212),
     surface = Color(0xFF1E1E1E),
     onBackground = Color.White,
     onSurface = Color.White,
+    onSurfaceVariant = Color(0xFFB0B0B0),
+    outlineVariant = Color(0xFF444444),
     error = FormColors.errorColor
 )
 
@@ -50,4 +54,3 @@ fun DementiaTesterTheme(
         content = content
     )
 }
-
