@@ -64,10 +64,23 @@ actual class AppointmentService {
         }
     }
 
-    private fun snapshotToMap(snapshot: FIRDataSnapshot): Map<*, *>? {
+    actual fun updateAppointmentStatus(appointmentId: String, newStatus: AppointmentStatus, callback: (DatabaseResult<Unit>) -> Unit) {
+        val userId = FIRAuth.auth()?.currentUser()?.uid()
+        if (userId == null) { callback(DatabaseResult.Error("No user is signed in")); return }
+        
+        val ref = FIRDatabase.database()?.reference()?.child(collectionPath)?.child(userId)?.child(appointmentId)
+        if (ref == null) { callback(DatabaseResult.Error("Firebase not initialized")); return }
+
+        ref.updateChildValues(mapOf("status" to newStatus.name)) { error, _ ->
+            if (error == null) callback(DatabaseResult.Success(Unit))
+            else callback(DatabaseResult.Error("Failed to update status: ${error.localizedDescription}"))
+        }
+    }
+
+    private fun snapshotToMap(snapshot: FIRDataSnapshot): Map<String, Any?>? {
         val value = snapshot.value
         return when (value) {
-            is Map<*, *>    -> value
+            is Map<*, *>    -> value as? Map<String, Any?>
             is NSDictionary -> nsDictionaryToMap(value)
             else            -> null
         }
