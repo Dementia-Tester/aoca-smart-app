@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -91,13 +92,13 @@ fun RemindersView() {
             text = "Your Reminders",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Text(
             text = "Create and view your reminders",
             fontSize = 16.sp,
-
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
 
@@ -112,8 +113,8 @@ fun RemindersView() {
                 .height(80.dp)
                 .padding(vertical = 16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = FormColors.green,
-                contentColor = Color.White
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ),
             enabled = true
         ) {
@@ -121,7 +122,10 @@ fun RemindersView() {
         }
 
         if (reminders.isEmpty()) {
-            Text("You don't have any reminders yet.")
+            Text(
+                text = "You don't have any reminders yet.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         } else {
             LazyColumn {
                 items(reminders) { reminder ->

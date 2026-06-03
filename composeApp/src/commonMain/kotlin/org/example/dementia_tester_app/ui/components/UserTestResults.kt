@@ -1,6 +1,7 @@
 package org.example.dementia_tester_app.ui.components
 
 
+import android.annotation.SuppressLint
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -453,6 +454,7 @@ private fun MiniGameAttemptDetails(
  * @param crosshairVisible Whether to display crosshair lines for the selected point
  * @param startAttemptIndex Starting index for attempt numbering (default: 0)
  */
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun ScoreLineGraph(
     attempts: List<Int>,
@@ -560,6 +562,7 @@ private fun ScoreLineGraph(
  * @param onPointSelected Callback function when a point is clicked, receives the user (1 or 2) and index
  * @param crosshairVisible Whether to display crosshair lines for the selected point
  */
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 private fun ComparativeScoreLineGraph(
     attempts1: List<UserAttempts>,
@@ -871,3 +874,4 @@ fun UserTestResults(
         }
     }
 }
+

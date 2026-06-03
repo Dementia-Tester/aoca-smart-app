@@ -1,13 +1,14 @@
 package org.example.dementia_tester_app.ui.screens.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.example.dementia_tester_app.ui.components.HorizontalMenu
 import org.example.dementia_tester_app.ui.screens.FocusFlick
@@ -24,17 +25,18 @@ fun Dashboard() {
     // Define the menu items
     val menuItems = listOf("Reminders", "Test", "Games", "Progress")
     var selectedMenuItem by remember { mutableStateOf(menuItems[0]) }
-    val headerColor = Color(0xFF66BB23)
+    val activeColor = MaterialTheme.colorScheme.primary
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         HorizontalMenu(
             menuItems = menuItems,
             selectedMenuItem = selectedMenuItem,
-            activeColor = headerColor,
+            activeColor = activeColor,
             onMenuItemSelected = { selectedMenuItem = it }
         )
         Box(
@@ -71,3 +73,4 @@ fun Dashboard() {
         }
     }
 }
+

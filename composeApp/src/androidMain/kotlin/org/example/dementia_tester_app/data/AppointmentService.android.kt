@@ -1,17 +1,19 @@
 package org.example.dementia_tester_app.data
 
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 /**
- * Android actual — writes/reads appointments in Firebase Firestore.
+ * Android actual — writes/reads appointments in Firebase Realtime DB.
+ * Nested under userId to match security rules and ensure consistency.
  */
 actual class AppointmentService {
     private val auth = FirebaseAuth.getInstance()
-    private val firestore = Firebase.firestore
-    private val collectionPath = "appointments"
+    private val database = FirebaseDatabase.getInstance().reference
+    private val collectionPath = "Appointments"
 
     actual fun createAppointment(appointment: Appointment, callback: (DatabaseResult<Unit>) -> Unit) {
         val userId = auth.currentUser?.uid
@@ -20,13 +22,13 @@ actual class AppointmentService {
             return 
         }
 
-        // Let Firestore generate the unique ID
-        val docRef = firestore.collection(collectionPath).document()
-        val id = docRef.id
+        // Generate a unique ID using push() under the user's specific node
+        val newApptRef = database.child(collectionPath).child(userId).push()
+        val id = newApptRef.key ?: ""
 
         val appt = appointment.copy(id = id, userId = userId)
         
-        docRef.set(appt.toMap())
+        newApptRef.setValue(appt.toMap())
             .addOnSuccessListener { callback(DatabaseResult.Success(Unit)) }
             .addOnFailureListener { e ->
                 callback(DatabaseResult.Error("Failed to book appointment: ${e.message}"))
@@ -40,24 +42,39 @@ actual class AppointmentService {
             return 
         }
 
-        firestore.collection(collectionPath)
-            .whereEqualTo("userId", userId)
-            // .orderBy() is removed here to perfectly match iOS and avoid "Missing Index" crashes
-            .get()
-            .addOnSuccessListener { snapshot ->
-                try {
-                    val list = mutableListOf<Appointment>()
-                    for (doc in snapshot.documents) {
-                        val data = doc.data ?: continue
-                        list.add(Appointment.fromMap(data, doc.id))
+        database.child(collectionPath).child(userId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    try {
+                        val list = mutableListOf<Appointment>()
+                        for (child in snapshot.children) {
+                            val data = child.value as? Map<*, *> ?: continue
+                            list.add(Appointment.fromMap(data, child.key ?: ""))
+                        }
+                        callback(DatabaseResult.Success(list))
+                    } catch (e: Exception) {
+                        callback(DatabaseResult.Error("Failed to parse appointments: ${e.message}"))
                     }
-                    callback(DatabaseResult.Success(list))
-                } catch (e: Exception) {
-                    callback(DatabaseResult.Error("Failed to parse appointments: ${e.message}"))
                 }
-            }
+
+                override fun onCancelled(error: DatabaseError) {
+                    callback(DatabaseResult.Error("Failed to load appointments: ${error.message}"))
+                }
+            })
+    }
+
+    actual fun updateAppointmentStatus(appointmentId: String, newStatus: AppointmentStatus, callback: (DatabaseResult<Unit>) -> Unit) {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            callback(DatabaseResult.Error("No user is signed in"))
+            return
+        }
+
+        database.child(collectionPath).child(userId).child(appointmentId).child("status")
+            .setValue(newStatus.name)
+            .addOnSuccessListener { callback(DatabaseResult.Success(Unit)) }
             .addOnFailureListener { e ->
-                callback(DatabaseResult.Error("Failed to load appointments: ${e.message}"))
+                callback(DatabaseResult.Error("Failed to update status: ${e.message}"))
             }
     }
 }

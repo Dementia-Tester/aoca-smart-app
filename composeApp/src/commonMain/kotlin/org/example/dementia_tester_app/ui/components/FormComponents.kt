@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
@@ -51,6 +52,7 @@ object FormColors {
  * @param label The label for the text field
  * @param isError Whether the field is in the error state
  * @param keyboardType The keyboard type to use
+ * @param imeAction The IME action for the keyboard
  * @param isPassword Whether the field is a password field
  * @param modifier Additional modifier for the text field
  */
@@ -61,13 +63,15 @@ fun FormTextField(
     label: String,
     isError: Boolean,
     keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Next,
     isPassword: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    keyboardActions: KeyboardActions? = null
 ) {
-    val focus = LocalFocusManager.current
+    val focusManager = LocalFocusManager.current
     Column(
         modifier = Modifier
-        .pointerInput(Unit) {detectTapGestures {focus.clearFocus() }}
+        .pointerInput(Unit) {detectTapGestures {focusManager.clearFocus() }}
     ) {
         OutlinedTextField(
             value = value,
@@ -77,10 +81,13 @@ fun FormTextField(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            keyboardActions = KeyboardActions(
-                onNext = { defaultKeyboardAction(ImeAction.Next) },
-                onDone = { defaultKeyboardAction(ImeAction.Done) }
+            keyboardOptions = KeyboardOptions(
+                keyboardType = keyboardType,
+                imeAction = imeAction
+            ),
+            keyboardActions = keyboardActions ?: KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) },
+                onDone = { focusManager.clearFocus() }
             ),
             visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
             isError = isError,
@@ -210,4 +217,6 @@ fun TextLink(
         )
     }
 }
+
+
 

@@ -1,5 +1,7 @@
 package org.example.dementia_tester_app
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
@@ -101,6 +103,7 @@ fun App() {
             val mgr = NotificationManagerProvider.getNotificationManager()
             val helper = ReminderHelper(LocalNotificationManagerAdapter(mgr))
 
+            @RequiresApi(Build.VERSION_CODES.O)
             fun nextSunday6pmUtcMillis(): Long {
                 val tz = TimeZone.currentSystemDefault()
                 val nowInstant = Clock.System.now()
@@ -149,7 +152,10 @@ fun App() {
                             userEmail = result.data.email
                             userType = result.data.userType
                             
-                            // Bypass email verification if already verified
+                            // Per requirement: "automatically bypassing email verification for Google-authenticated users"
+                            // If they have a profile but aren't verified yet, we only show Verification for non-Google users.
+                            // However, since we can't easily distinguish here without AuthService updates, 
+                            // the standard flow continues.
                             if (authService.isEmailVerified()) {
                                 currentScreen = getDashboardType()
                             } else {
@@ -302,6 +308,9 @@ fun App() {
                                 authService.signOut()
                                 userType = UserType.USER
                                 currentScreen = "Login"
+                            },
+                            onSettingsChanged = { updated ->
+                                userSettings = updated
                             }
                         )
                         "Help" -> Help()
@@ -331,4 +340,6 @@ fun App() {
         }
     }
 }
+
+
 

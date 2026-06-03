@@ -106,8 +106,8 @@ fun IntroductionScreen(
                     .height(48.dp)
                     .width(120.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.LightGray,
-                    contentColor = MaterialTheme.colorScheme.onSurface // Updated from Color.Black
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
                 Text("Back")
@@ -120,7 +120,7 @@ fun IntroductionScreen(
                     .width(120.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = FormColors.green,
-                    contentColor = MaterialTheme.colorScheme.surface // Updated from Color.White
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Text("Start")
@@ -169,12 +169,12 @@ fun HealthSurvey(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.LightGray),
+                .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = errorMessage ?: "An error occurred.",
-                color = Color.Red,
+                color = MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -398,6 +398,7 @@ fun HealthSurvey(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .run {
                 if (!showSummary && !showAttemptsList) this.verticalScroll(scrollState) else this
             }

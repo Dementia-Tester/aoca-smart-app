@@ -2,16 +2,18 @@ package org.example.dementia_tester_app.ui.screens.login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.background
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,8 +91,6 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
     val userProfileService = remember { UserProfileService() }
     var isLoading by remember { mutableStateOf(false) }
 
-    val scrollState = rememberScrollState()
-    
     fun handleSignUp(email: String, password: String) {
         isLoading = true
         authService.signUp(email, password) { result ->
@@ -113,7 +113,7 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
                         emergencyRelation = emergencyRelation,
                         emergencyPhoneNumber = emergencyPhoneNumber.trim()
                     )
-                    
+
                     userProfileService.updateUserProfile(userProfile) { dbResult ->
                         isLoading = false
                         when (dbResult) {
@@ -134,13 +134,49 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
         }
     }
 
+    val scrollState = rememberScrollState()
+    
+    fun onSignUpClick() {
+        fieldErrors = validateFields(
+            mapOf(
+                NAME to name, EMAIL to email, DATE_OF_BIRTH to dateOfBirth,
+                PASSWORD to password, CONFIRM_PASSWORD to confirmPassword,
+                PHONE_NUMBER to phoneNumber, ADDRESS to address,
+                SUBURB to suburb, STATE to state, POSTCODE to postcode,
+                COUNTRY to country, GENDER to gender, EMERGENCY_NAME to emergencyName,
+                EMERGENCY_EMAIL to emergencyEmail, EMERGENCY_RELATION to emergencyRelation,
+                EMERGENCY_PHONE_NUMBER to emergencyPhoneNumber
+            )
+        )
+
+        if (fieldErrors.isNotEmpty()) {
+            errorMessage = "Please enter all required fields"; showErrorMessage = true
+        } else if (!email.isValidEmail()) {
+            updateFieldError(EMAIL, true); errorMessage = "Please enter a valid email address"; showErrorMessage = true
+        } else if (emergencyEmail.isNotEmpty() && !emergencyEmail.isValidEmail()) {
+            updateFieldError(EMERGENCY_EMAIL, true); errorMessage = "Please enter a valid emergency contact email address"; showErrorMessage = true
+        } else if (!phoneNumber.isValidPhoneNumber()) {
+            updateFieldError(PHONE_NUMBER, true); errorMessage = "Please enter a valid phone number"; showErrorMessage = true
+        } else if (!emergencyPhoneNumber.isValidPhoneNumber()) {
+            updateFieldError(EMERGENCY_PHONE_NUMBER, true); errorMessage = "Please enter a valid emergency contact phone number"; showErrorMessage = true
+        } else if (password != confirmPassword) {
+            passwordsMatchError = true; errorMessage = "Passwords do not match"; showErrorMessage = true
+        } else if (calculateAgeFromDateOfBirth(dateOfBirth) == null) {
+            updateFieldError(DATE_OF_BIRTH, true); errorMessage = "Age cannot be 0. Please select a valid date of birth"; showErrorMessage = true
+        } else {
+            handleSignUp(email.trim(), password)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            // ADDED: color.White replacement
             .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 32.dp)
-            .verticalScroll(scrollState),
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding()
+            .verticalScroll(scrollState)
+            .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // App Title
@@ -167,6 +203,7 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
             onValueChange = { name = it; clearFieldError(NAME); showErrorMessage = false },
             label = "Name",
             isError = isFieldError(NAME),
+            imeAction = ImeAction.Next
         )
 
         FormTextField(
@@ -174,7 +211,8 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
             onValueChange = { email = it; clearFieldError(EMAIL); showErrorMessage = false },
             label = "Email",
             isError = isFieldError(EMAIL),
-            keyboardType = KeyboardType.Email
+            keyboardType = KeyboardType.Email,
+            imeAction = ImeAction.Next
         )
         
         DateField(
@@ -192,7 +230,8 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
             label = "Password",
             isError = isFieldError(PASSWORD) || passwordsMatchError,
             keyboardType = KeyboardType.Password,
-            isPassword = true
+            isPassword = true,
+            imeAction = ImeAction.Next
         )
 
         FormTextField(
@@ -201,7 +240,8 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
             label = "Confirm Password",
             isError = isFieldError(CONFIRM_PASSWORD) || passwordsMatchError,
             keyboardType = KeyboardType.Password,
-            isPassword = true
+            isPassword = true,
+            imeAction = ImeAction.Next
         )
 
         FormTextField(
@@ -209,7 +249,8 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
             onValueChange = { phoneNumber = it; clearFieldError(PHONE_NUMBER); showErrorMessage = false },
             label = "Phone Number",
             isError = isFieldError(PHONE_NUMBER),
-            keyboardType = KeyboardType.Phone
+            keyboardType = KeyboardType.Phone,
+            imeAction = ImeAction.Next
         )
 
         Text(
@@ -221,11 +262,11 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp)
         )
 
-        FormTextField(value = address, onValueChange = { address = it; clearFieldError(ADDRESS); showErrorMessage = false }, label = "Address", isError = isFieldError(ADDRESS))
-        FormTextField(value = suburb, onValueChange = { suburb = it; clearFieldError(SUBURB); showErrorMessage = false }, label = "Suburb", isError = isFieldError(SUBURB))
-        FormTextField(value = state, onValueChange = { state = it; clearFieldError(STATE); showErrorMessage = false }, label = "State", isError = isFieldError(STATE))
-        FormTextField(value = postcode, onValueChange = { postcode = it; clearFieldError(POSTCODE); showErrorMessage = false }, label = "Postcode", isError = isFieldError(POSTCODE), keyboardType = KeyboardType.Number)
-        FormTextField(value = country, onValueChange = { country = it; clearFieldError(COUNTRY); showErrorMessage = false }, label = "Country", isError = isFieldError(COUNTRY))
+        FormTextField(value = address, onValueChange = { address = it; clearFieldError(ADDRESS); showErrorMessage = false }, label = "Address", isError = isFieldError(ADDRESS), imeAction = ImeAction.Next)
+        FormTextField(value = suburb, onValueChange = { suburb = it; clearFieldError(SUBURB); showErrorMessage = false }, label = "Suburb", isError = isFieldError(SUBURB), imeAction = ImeAction.Next)
+        FormTextField(value = state, onValueChange = { state = it; clearFieldError(STATE); showErrorMessage = false }, label = "State", isError = isFieldError(STATE), imeAction = ImeAction.Next)
+        FormTextField(value = postcode, onValueChange = { postcode = it; clearFieldError(POSTCODE); showErrorMessage = false }, label = "Postcode", isError = isFieldError(POSTCODE), keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+        FormTextField(value = country, onValueChange = { country = it; clearFieldError(COUNTRY); showErrorMessage = false }, label = "Country", isError = isFieldError(COUNTRY), imeAction = ImeAction.Next)
 
         Column(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
             Text(
@@ -285,8 +326,8 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
         )
 
-        FormTextField(value = emergencyName, onValueChange = { emergencyName = it; clearFieldError(EMERGENCY_NAME); showErrorMessage = false }, label = "Name", isError = isFieldError(EMERGENCY_NAME))
-        FormTextField(value = emergencyEmail, onValueChange = { emergencyEmail = it; clearFieldError(EMERGENCY_EMAIL); showErrorMessage = false }, label = "Email", isError = isFieldError(EMERGENCY_EMAIL), keyboardType = KeyboardType.Email)
+        FormTextField(value = emergencyName, onValueChange = { emergencyName = it; clearFieldError(EMERGENCY_NAME); showErrorMessage = false }, label = "Name", isError = isFieldError(EMERGENCY_NAME), imeAction = ImeAction.Next)
+        FormTextField(value = emergencyEmail, onValueChange = { emergencyEmail = it; clearFieldError(EMERGENCY_EMAIL); showErrorMessage = false }, label = "Email", isError = isFieldError(EMERGENCY_EMAIL), keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
 
         val relationOptions = listOf("Spouse", "Parent", "Other family", "Friend", "Other")
         FormDropdown(
@@ -304,41 +345,15 @@ fun SignUp(onBack: () -> Unit = {}, onSignUpSuccess: (String) -> Unit = {_ ->}) 
             label = "Phone Number",
             isError = isFieldError(EMERGENCY_PHONE_NUMBER),
             keyboardType = KeyboardType.Phone,
+            imeAction = ImeAction.Done,
+            keyboardActions = KeyboardActions(
+                onDone = { onSignUpClick() }
+            ),
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
         Button(
-            onClick = { 
-                fieldErrors = validateFields(
-                    mapOf(
-                        NAME to name, EMAIL to email, DATE_OF_BIRTH to dateOfBirth,
-                        PASSWORD to password, CONFIRM_PASSWORD to confirmPassword,
-                        PHONE_NUMBER to phoneNumber, ADDRESS to address,
-                        SUBURB to suburb, STATE to state, POSTCODE to postcode,
-                        COUNTRY to country, GENDER to gender, EMERGENCY_NAME to emergencyName,
-                        EMERGENCY_EMAIL to emergencyEmail, EMERGENCY_RELATION to emergencyRelation,
-                        EMERGENCY_PHONE_NUMBER to emergencyPhoneNumber
-                    )
-                )
-
-                if (fieldErrors.isNotEmpty()) {
-                    errorMessage = "Please enter all required fields"; showErrorMessage = true
-                } else if (!email.isValidEmail()) {
-                    updateFieldError(EMAIL, true); errorMessage = "Please enter a valid email address"; showErrorMessage = true
-                } else if (emergencyEmail.isNotEmpty() && !emergencyEmail.isValidEmail()) {
-                    updateFieldError(EMERGENCY_EMAIL, true); errorMessage = "Please enter a valid emergency contact email address"; showErrorMessage = true
-                } else if (!phoneNumber.isValidPhoneNumber()) {
-                    updateFieldError(PHONE_NUMBER, true); errorMessage = "Please enter a valid phone number"; showErrorMessage = true
-                } else if (!emergencyPhoneNumber.isValidPhoneNumber()) {
-                    updateFieldError(EMERGENCY_PHONE_NUMBER, true); errorMessage = "Please enter a valid emergency contact phone number"; showErrorMessage = true
-                } else if (password != confirmPassword) {
-                    passwordsMatchError = true; errorMessage = "Passwords do not match"; showErrorMessage = true
-                } else if (calculateAgeFromDateOfBirth(dateOfBirth) == null) {
-                    updateFieldError(DATE_OF_BIRTH, true); errorMessage = "Age cannot be 0. Please select a valid date of birth"; showErrorMessage = true
-                } else {
-                    handleSignUp(email.trim(), password)
-                }
-            },
+            onClick = { onSignUpClick() },
             modifier = Modifier.fillMaxWidth().height(50.dp),
             colors = ButtonDefaults.buttonColors(containerColor = FormColors.green),
             enabled = !isLoading

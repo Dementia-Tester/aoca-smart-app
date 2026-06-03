@@ -48,13 +48,17 @@ import org.example.dementia_tester_app.ui.components.FormToggle
 
 //this is a setting page
 @Composable
-fun Settings(onAccountDeleted: () -> Unit) {
+fun Settings(
+    onAccountDeleted: () -> Unit,
+    onSettingsChanged: (UserSettings) -> Unit = {}
+) {
     val scrollState      = rememberScrollState()
     val authService      = remember { AuthService() }
     val settingsService  = remember { UserSettingsService() }
 
     // ── Single consolidated state object (replaces 12 separate vars) ──
     var settings by remember { mutableStateOf(UserSettings()) }
+    var hasChanges by remember { mutableStateOf(false) }
     var expandedSection by remember { mutableStateOf<String?>(null) }
     var accountMessage           by remember { mutableStateOf<String?>(null) }
 
@@ -64,6 +68,7 @@ fun Settings(onAccountDeleted: () -> Unit) {
             when (result) {
                 is DatabaseResult.Success -> {
                     settings = result.data
+                    hasChanges = false
                     accountMessage = "Settings loaded successfully."
                 }
 
@@ -79,12 +84,21 @@ fun Settings(onAccountDeleted: () -> Unit) {
     var confirmPassword          by remember { mutableStateOf("") }
 
 
-    // Helper: save updated settings and update local state atomically
-    fun save(updated: UserSettings) {
+    // Helper: update local state and mark as changed
+    fun updateSettings(updated: UserSettings) {
         settings = updated
-        settingsService.saveSettings(updated) { result ->
+        hasChanges = true
+    }
+
+    // Helper: save current settings to Firebase
+    fun saveChanges() {
+        settingsService.saveSettings(settings) { result ->
             accountMessage = when (result) {
-                is DatabaseResult.Success -> "Settings saved successfully."
+                is DatabaseResult.Success -> {
+                    hasChanges = false
+                    onSettingsChanged(settings)
+                    "Settings saved successfully."
+                }
                 is DatabaseResult.Error -> result.message
             }
         }
@@ -113,20 +127,20 @@ fun Settings(onAccountDeleted: () -> Unit) {
                         modifier = Modifier.weight(1f))
                     FormDropdown(label = "", value = settings.textSize,
                         options = listOf("Small", "Medium", "Large"),
-                        onValueChange = { save(settings.copy(textSize = it)) },
+                        onValueChange = { updateSettings(settings.copy(textSize = it)) },
                         modifier = Modifier.weight(1f))
                 }
                 FormToggle("High Contrast Mode", settings.highContrastMode,
-                    onCheckedChange = { save(settings.copy(highContrastMode = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(highContrastMode = it)) })
                 FormToggle("Screen Reader", settings.screenReader,
-                    onCheckedChange = { save(settings.copy(screenReader = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(screenReader = it)) })
                 FormToggle("Reduce Motion", settings.reduceMotion,
-                    onCheckedChange = { save(settings.copy(reduceMotion = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(reduceMotion = it)) })
 
                 FormToggle("Dark Mode", settings.darkMode,
-                    onCheckedChange = { save(settings.copy(darkMode = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(darkMode = it)) })
                 FormToggle("Color Blind Mode", settings.colorBlindMode,
-                    onCheckedChange = { save(settings.copy(colorBlindMode = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(colorBlindMode = it)) })
             }
         }
         )
@@ -145,15 +159,15 @@ fun Settings(onAccountDeleted: () -> Unit) {
                 // Note: turning a reminder OFF also cancels any scheduled local alarm
                 // via the ReminderService — that integration point is preserved here.
                 FormToggle("Appointment Reminders", settings.appointmentReminders,
-                    onCheckedChange = { save(settings.copy(appointmentReminders = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(appointmentReminders = it)) })
                 FormToggle("Medication Reminders", settings.medicationReminders,
-                    onCheckedChange = { save(settings.copy(medicationReminders = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(medicationReminders = it)) })
                 FormToggle("Test Reminders", settings.testReminders,
-                    onCheckedChange = { save(settings.copy(testReminders = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(testReminders = it)) })
                 FormToggle("App Updates", settings.appUpdates,
-                    onCheckedChange = { save(settings.copy(appUpdates = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(appUpdates = it)) })
                 FormToggle("Email Notifications", settings.emailNotifications,
-                    onCheckedChange = { save(settings.copy(emailNotifications = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(emailNotifications = it)) })
             }
         }
         )
@@ -170,9 +184,9 @@ fun Settings(onAccountDeleted: () -> Unit) {
                 Text("Account Settings", fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp))
                 FormToggle("Data Sharing", settings.dataSharing,
-                    onCheckedChange = { save(settings.copy(dataSharing = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(dataSharing = it)) })
                 FormToggle("Sync with Cloud", settings.syncWithCloud,
-                    onCheckedChange = { save(settings.copy(syncWithCloud = it)) })
+                    onCheckedChange = { updateSettings(settings.copy(syncWithCloud = it)) })
                 Button(onClick = { showChangePasswordDialog = true },
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     Text("Change Password")
@@ -194,6 +208,17 @@ fun Settings(onAccountDeleted: () -> Unit) {
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(16.dp)
             )
+        }
+
+        // ── Save Button ────────────────────────────────────────────
+        Button(
+            onClick = { saveChanges() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            enabled = hasChanges
+        ) {
+            Text("Save All Changes")
         }
 
         Spacer(Modifier.height(16.dp))

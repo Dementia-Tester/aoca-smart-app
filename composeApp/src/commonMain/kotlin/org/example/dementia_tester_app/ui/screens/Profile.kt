@@ -2,12 +2,12 @@ package org.example.dementia_tester_app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,7 +52,7 @@ fun Profile(onBack: () -> Unit = {}) {
     var originalProfile by remember { mutableStateOf(UserProfile()) }
     var isUploading by remember { mutableStateOf(false) }
 
-    val imagePickerLauncher = rememberImagePickerLauncher { bytes ->
+    val imagePickerLauncher = rememberImagePickerLauncher { bytes: ByteArray ->
         isUploading = true
         userProfileService.uploadProfileImage(bytes) { result ->
             isUploading = false
@@ -101,21 +102,23 @@ fun Profile(onBack: () -> Unit = {}) {
 
     val scrollState = rememberScrollState()
 
-    val hasProfileChanges by derivedStateOf {
-        name != originalProfile.name ||
-                dateOfBirth != originalProfile.dateOfBirth ||
-                email != originalProfile.email ||
-                phoneNumber != originalProfile.phoneNumber ||
-                address != originalProfile.address ||
-                suburb != originalProfile.suburb ||
-                state != originalProfile.state ||
-                postcode != originalProfile.postcode ||
-                country != originalProfile.country ||
-                gender != originalProfile.gender ||
-                emergencyName != originalProfile.emergencyName ||
-                emergencyEmail != originalProfile.emergencyEmail ||
-                emergencyRelation != originalProfile.emergencyRelation ||
-                emergencyPhoneNumber != originalProfile.emergencyPhoneNumber
+    val hasProfileChanges by remember {
+        derivedStateOf {
+            name != originalProfile.name ||
+                    dateOfBirth != originalProfile.dateOfBirth ||
+                    email != originalProfile.email ||
+                    phoneNumber != originalProfile.phoneNumber ||
+                    address != originalProfile.address ||
+                    suburb != originalProfile.suburb ||
+                    state != originalProfile.state ||
+                    postcode != originalProfile.postcode ||
+                    country != originalProfile.country ||
+                    gender != originalProfile.gender ||
+                    emergencyName != originalProfile.emergencyName ||
+                    emergencyEmail != originalProfile.emergencyEmail ||
+                    emergencyRelation != originalProfile.emergencyRelation ||
+                    emergencyPhoneNumber != originalProfile.emergencyPhoneNumber
+        }
     }
 
     fun revertChanges() {
@@ -264,7 +267,14 @@ fun Profile(onBack: () -> Unit = {}) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) { // Apply surface color
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding()
+    ) { // Apply surface color
         if (isLoading || isUploading) {
             LoadingSpinner()
         }
@@ -298,9 +308,9 @@ fun Profile(onBack: () -> Unit = {}) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(horizontal = 32.dp, vertical = 16.dp)
-                .padding(bottom = 80.dp)
-                .verticalScroll(scrollState),
+                .padding(bottom = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(
@@ -352,7 +362,8 @@ fun Profile(onBack: () -> Unit = {}) {
                     value = name,
                     onValueChange = { name = it },
                     label = "Name",
-                    isError = false
+                    isError = false,
+                    imeAction = ImeAction.Next
                 )
             } else {
                 ProfileField(label = "Name", value = name)
@@ -384,7 +395,8 @@ fun Profile(onBack: () -> Unit = {}) {
                     },
                     label = "Email",
                     isError = emailError,
-                    keyboardType = KeyboardType.Email
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
                 )
             } else {
                 ProfileField(label = "Email", value = email)
@@ -399,7 +411,8 @@ fun Profile(onBack: () -> Unit = {}) {
                     },
                     label = "Phone Number",
                     isError = phoneNumberError,
-                    keyboardType = KeyboardType.Phone
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Next
                 )
             } else {
                 ProfileField(label = "Phone Number", value = phoneNumber)
@@ -549,7 +562,8 @@ fun Profile(onBack: () -> Unit = {}) {
                     },
                     label = "Phone Number",
                     isError = emergencyPhoneNumberError,
-                    keyboardType = KeyboardType.Phone
+                    keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Done
                 )
             } else {
                 ProfileField(label = "Phone Number", value = emergencyPhoneNumber)
