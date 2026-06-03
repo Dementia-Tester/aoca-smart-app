@@ -35,7 +35,7 @@ fun RadioOption(
             .clickable { onSelect() }
             .border(
                 width = 1.dp,
-                color = if (selected) FormColors.green else Color.LightGray,
+                color = if (selected) FormColors.green else MaterialTheme.colorScheme.outlineVariant,
                 shape = RoundedCornerShape(8.dp)
             )
             .background(
@@ -49,7 +49,7 @@ fun RadioOption(
             onClick = onSelect,
             colors = RadioButtonDefaults.colors(
                 selectedColor = FormColors.green,
-                unselectedColor = Color.Gray
+                unselectedColor = MaterialTheme.colorScheme.outline
             )
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -79,7 +79,7 @@ fun CheckboxOption(
             .clickable { onToggle() }
             .border(
                 width = 1.dp,
-                color = if (selected) FormColors.green else Color.LightGray,
+                color = if (selected) FormColors.green else MaterialTheme.colorScheme.outlineVariant,
                 shape = RoundedCornerShape(4.dp)
             )
             .background(
@@ -93,7 +93,7 @@ fun CheckboxOption(
             onCheckedChange = { onToggle() },
             colors = CheckboxDefaults.colors(
                 checkedColor = FormColors.green,
-                uncheckedColor = Color.Gray
+                uncheckedColor = MaterialTheme.colorScheme.outline
             )
         )
         Spacer(modifier = Modifier.width(4.dp))
@@ -213,8 +213,8 @@ fun QuestionComponent(
                     .height(48.dp)
                     .width(100.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.LightGray,
-                    contentColor = MaterialTheme.colorScheme.onSurface // Applied change
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
                 Text("Back")
@@ -226,8 +226,8 @@ fun QuestionComponent(
                     .height(48.dp)
                     .width(120.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Gray,
-                    contentColor = MaterialTheme.colorScheme.surface // Applied change (White -> Surface)
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             ) {
                 Text("Save & Exit")
@@ -240,7 +240,7 @@ fun QuestionComponent(
                     .width(100.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = FormColors.green,
-                    contentColor = MaterialTheme.colorScheme.surface // Applied change (White -> Surface)
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
                 Text("Next")
