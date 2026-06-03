@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.dementia_tester_app.ui.components.FormColors
@@ -153,6 +156,7 @@ fun ChatListScreen(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .imePadding()
             .padding(16.dp)
     ) {
         OutlinedTextField(
@@ -246,89 +250,117 @@ fun ChatConversationScreen(
     }
 
 
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                modifier = Modifier
-                    .clickable { onBack() }
-                    .padding(8.dp),
-                tint = FormColors.green
-            )
-
-            Text(
-                text = chat.name,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-
         Column(
             modifier = Modifier
-                .weight(1f, fill = false)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 16.dp)
+                .fillMaxSize()
+                .padding(bottom = 80.dp) // Space for the bottom input
         ) {
-            messages.forEach { message ->
-                ChatBubble(message)
-                Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    modifier = Modifier
+                        .clickable { onBack() }
+                        .padding(8.dp),
+                    tint = FormColors.green
+                )
+
+                Text(
+                    text = chat.name,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp)
+            ) {
+                messages.forEach { message ->
+                    ChatBubble(message)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        fun handleSend() {
+            if (messageText.isNotBlank()) {
+                val sentMessage = messageText.trim()
+                messages.add(ChatMessage(sentMessage, true))
+                sessionMessages[chat.name] = messages
+                FirebaseFirestore.getInstance()
+                    .collection("messages")
+                    .add(
+                        FirebaseChatMessage(
+                            chatName = chat.name,
+                            text = sentMessage,
+                            isFromUser = true
+                        )
+                    )
+                onMessageSent(chat.name, sentMessage)
+                messageText = ""
+            }
+        }
+
+        // Bottom input section
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp
         ) {
-            OutlinedTextField(
-                value = messageText,
-                onValueChange = { messageText = it },
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("Type a message...") },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = FormColors.green,
-                    unfocusedBorderColor = FormColors.green,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                )
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Button(
-                onClick = {
-                    if (messageText.isNotBlank()) {
-                        val sentMessage = messageText.trim()
-                        messages.add(ChatMessage(sentMessage, true))
-                        sessionMessages[chat.name] = messages
-                        FirebaseFirestore.getInstance()
-                            .collection("messages")
-                            .add(
-                                FirebaseChatMessage(
-                                    chatName = chat.name,
-                                    text = sentMessage,
-                                    isFromUser = true
-                                )
-                            )
-                        onMessageSent(chat.name, sentMessage)
-                        messageText = ""
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = FormColors.green
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Send")
+                OutlinedTextField(
+                    value = messageText,
+                    onValueChange = { messageText = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Type a message...") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Send
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSend = { handleSend() }
+                    ),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = FormColors.green,
+                        unfocusedBorderColor = FormColors.green,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                    )
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(
+                    onClick = { handleSend() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = FormColors.green
+                    )
+                ) {
+                    Text("Send")
+                }
             }
         }
     }
