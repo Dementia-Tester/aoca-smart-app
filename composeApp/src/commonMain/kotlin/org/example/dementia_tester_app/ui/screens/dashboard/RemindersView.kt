@@ -92,13 +92,13 @@ fun RemindersView() {
             text = "Your Reminders",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Text(
             text = "Create and view your reminders",
             fontSize = 16.sp,
-
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
 
@@ -122,7 +122,10 @@ fun RemindersView() {
         }
 
         if (reminders.isEmpty()) {
-            Text("You don't have any reminders yet.")
+            Text(
+                text = "You don't have any reminders yet.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         } else {
             LazyColumn {
                 items(reminders) { reminder ->
