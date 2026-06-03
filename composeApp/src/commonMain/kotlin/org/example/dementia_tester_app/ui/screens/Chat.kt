@@ -338,11 +338,12 @@ fun ChatConversationScreen(
                     placeholder = { Text("Type a message...") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Send
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSend = { handleSend() }
-                    ),
+        imeAction = ImeAction.Send
+    ),
+    keyboardActions = KeyboardActions(
+        onSend = { handleSend() } 
+    )
+)
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = FormColors.green,
                         unfocusedBorderColor = FormColors.green,
