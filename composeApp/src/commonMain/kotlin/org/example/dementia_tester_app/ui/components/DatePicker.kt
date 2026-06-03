@@ -83,6 +83,7 @@ fun DateField(
             Text(
                 text = displayValue ?: date,
                 fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
             )
             HorizontalDivider(
@@ -145,8 +146,8 @@ fun DateField(
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = if (isError) FormColors.errorColor else FormColors.green,
                     unfocusedBorderColor = if (isError) FormColors.errorColor else FormColors.green,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                     errorBorderColor = FormColors.errorColor
                 ),
                 isError = isError,
@@ -290,6 +291,7 @@ fun DatePickerDialog(
                     Text(
                         text = getMonthName(currentMonth),
                         style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .clickable { 
@@ -307,6 +309,7 @@ fun DatePickerDialog(
                     Text(
                         text = currentYear.toString(),
                         style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .clickable { 
@@ -353,6 +356,7 @@ fun DatePickerDialog(
                     Text(
                         text = "Select Year",
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                     )
@@ -379,7 +383,7 @@ fun DatePickerDialog(
                             ) {
                                 Text(
                                     text = year.toString(),
-                                    color = if (year == currentYear) Color.White else Color.Black,
+                                    color = if (year == currentYear) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                                     textAlign = TextAlign.Center
                                 )
                             }
@@ -390,6 +394,7 @@ fun DatePickerDialog(
                     Text(
                         text = "Select Month",
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                     )
@@ -421,7 +426,7 @@ fun DatePickerDialog(
                             ) {
                                 Text(
                                     text = monthName,
-                                    color = if (monthNumber == currentMonth) Color.White else Color.Black,
+                                    color = if (monthNumber == currentMonth) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                                     textAlign = TextAlign.Center
                                 )
                             }
@@ -438,7 +443,8 @@ fun DatePickerDialog(
                                 text = day,
                                 modifier = Modifier.weight(1f),
                                 textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -480,9 +486,9 @@ fun DatePickerDialog(
                                 Text(
                                     text = dayCell.day.toString(),
                                     color = when {
-                                        dayCell.isSelected -> Color.White
-                                        !dayCell.isSelectable -> Color.Gray
-                                        else -> Color.Black
+                                        dayCell.isSelected -> MaterialTheme.colorScheme.onPrimary
+                                        !dayCell.isSelectable -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                        else -> MaterialTheme.colorScheme.onSurface
                                     },
                                     textAlign = TextAlign.Center
                                 )
