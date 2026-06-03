@@ -96,6 +96,7 @@ fun ProgressView() {
             text = "Progress Analytics",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(vertical = 16.dp)
         )
 
@@ -113,7 +114,12 @@ fun ProgressView() {
 
         // Recent Activities Preview
         if (recentActivities.isNotEmpty()) {
-            Text("Recent Activity", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "Recent Activity",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Spacer(modifier = Modifier.height(8.dp))
             recentActivities.forEach { activity ->
                 RecentActivityItem(activity)
@@ -131,7 +137,13 @@ fun ProgressView() {
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = { Text(title, fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal) }
+                    text = { 
+                        Text(
+                            title, 
+                            fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                            color = if (selectedTab == index) FormColors.green else MaterialTheme.colorScheme.onSurface
+                        ) 
+                    }
                 )
             }
         }
@@ -165,8 +177,8 @@ fun RecentActivityItem(activity: Activity) {
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column {
-            Text(activity.title, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-            Text(activity.type.capitalize(), fontSize = 12.sp, color = Color.Gray)
+            Text(activity.title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+            Text(activity.type.capitalize(), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -223,13 +235,19 @@ fun GamesTab(gameResults: Map<GameType, List<GameAttempts>>) {
         ScrollableTabRow(
             selectedTabIndex = GameType.entries.indexOf(selectedGame),
             containerColor = Color.Transparent,
+            contentColor = FormColors.green,
             edgePadding = 0.dp
         ) {
             GameType.entries.forEach { type ->
                 Tab(
                     selected = selectedGame == type,
                     onClick = { selectedGame = type },
-                    text = { Text(type.name.replace("_", " ").lowercase().capitalize()) }
+                    text = { 
+                        Text(
+                            type.name.replace("_", " ").lowercase().capitalize(),
+                            color = if (selectedGame == type) FormColors.green else MaterialTheme.colorScheme.onSurface
+                        ) 
+                    }
                 )
             }
         }
