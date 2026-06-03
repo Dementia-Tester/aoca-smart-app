@@ -6,7 +6,7 @@ Dementia Tester App
 
 ## Tester
 
-Rahul Singh
+Tshering Dorji
 
 ## Testing Environment
 
