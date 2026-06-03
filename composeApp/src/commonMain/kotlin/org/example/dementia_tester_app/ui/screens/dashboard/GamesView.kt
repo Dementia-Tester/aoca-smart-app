@@ -32,13 +32,15 @@ fun GamesView(gamecallback: (String) -> Unit) {
             Text(
                 text = "Memory Games",
                 fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
         Row(){
             Text(
                 text = "Train your brain with memory games.",
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         for(game in games){
