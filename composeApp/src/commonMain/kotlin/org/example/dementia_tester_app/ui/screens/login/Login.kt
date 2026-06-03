@@ -172,11 +172,10 @@ fun Login(
                 keyboardType = KeyboardType.Password,
                 isPassword = true,
                 imeAction = ImeAction.Done,
-                keyboardActions = KeyboardActions(
-                    onDone = { handleLogin() }
-                )
-            )
-
+    keyboardActions = KeyboardActions(
+        onDone = { handleLogin() } 
+    )
+)
             // Forgot Password Link
             TextButton(
                 onClick = { onForgotPassword() },
