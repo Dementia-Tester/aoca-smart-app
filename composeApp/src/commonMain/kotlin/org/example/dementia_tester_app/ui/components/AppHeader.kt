@@ -35,7 +35,9 @@ fun AppHeader(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
-            modifier = Modifier.padding(start = 5.dp, end = 5.dp, top = 50.dp, bottom = 10.dp)
+            modifier = Modifier
+                .statusBarsPadding()
+                .padding(start = 5.dp, end = 5.dp, top = 10.dp, bottom = 10.dp)
         ) {
             TextButton(
                 onClick = {
@@ -241,4 +243,5 @@ fun AppMenuContent(
         }
     }
 }
+
 
