@@ -76,14 +76,16 @@ fun CognitiveIntroductionScreen(
 
                 Text(
                     text = "This cognitive assessment is designed to assess and track various aspects of your mental health.",
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "The assessment consists of 24 questions, assessing the following psychiatric domains:",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -109,7 +111,8 @@ fun CognitiveIntroductionScreen(
                     domains.forEach { domain ->
                         Text(
                             text = "$domain",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -118,7 +121,8 @@ fun CognitiveIntroductionScreen(
 
                 Text(
                     text = "Your responses will help us provide personalized recommendations for maintaining and improving your cognitive health.",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -126,7 +130,8 @@ fun CognitiveIntroductionScreen(
                 Text(
                     text = "All information provided is confidential and will only be used to support your health journey.",
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -486,12 +491,14 @@ fun TestView() {
                 text = "Your Assessments",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
             )
             Text(
                 text = "View your assessment results or start a new assessment.",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
             // Show error if present:
