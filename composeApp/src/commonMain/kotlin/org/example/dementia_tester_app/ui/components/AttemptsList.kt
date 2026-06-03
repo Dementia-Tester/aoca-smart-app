@@ -31,9 +31,9 @@ fun AttemptsListScreen(
             modifier = Modifier.fillMaxSize(),
             contentWindowInsets = WindowInsets.safeDrawing
                 .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-            containerColor = Color(0xFFF5F5F5),
+            containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
-                Surface(color = Color(0xFFF5F5F5), tonalElevation = 3.dp) {
+                Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
                     Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -53,7 +53,7 @@ fun AttemptsListScreen(
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = FormColors.green,
-                            contentColor = Color.White
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) { Text("Start New Attempt") }
                 }
@@ -85,7 +85,7 @@ fun AttemptsListScreen(
                             .padding(vertical = 32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No previous attempts found", color = Color.Gray)
+                        Text("No previous attempts found", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             } else {
@@ -116,7 +116,7 @@ private fun AttemptItemCard(
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         shape = RoundedCornerShape(8.dp)
     ) {
@@ -133,12 +133,13 @@ private fun AttemptItemCard(
                 Text(
                     text = "Attempt ${attempt.attemptNumber}",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = attempt.timestamp,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             
@@ -161,7 +162,8 @@ private fun AttemptItemCard(
                         Text(
                             text = "Score: ${attempt.totalScore} / ${attempt.totalQuestions * 4}",
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 } else {
@@ -169,14 +171,14 @@ private fun AttemptItemCard(
                         Text(
                             text = "Incomplete",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Red,
+                            color = MaterialTheme.colorScheme.error,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Progress: ${attempt.getCompletionText()}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -190,7 +192,7 @@ private fun AttemptItemCard(
                         onClick = onViewClicked,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = FormColors.green,
-                            contentColor = Color.White
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
                         Text("View")
@@ -200,7 +202,8 @@ private fun AttemptItemCard(
                     Row {
                         OutlinedButton(
                             onClick = onViewClicked,
-                            modifier = Modifier.padding(end = 8.dp)
+                            modifier = Modifier.padding(end = 8.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = FormColors.green)
                         ) {
                             Text("View")
                         }
@@ -209,7 +212,7 @@ private fun AttemptItemCard(
                             onClick = onContinueClicked,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = FormColors.green,
-                                contentColor = Color.White
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             Text("Continue")
@@ -225,7 +228,7 @@ private fun AttemptItemCard(
                     progress = { attempt.getCompletionPercentage() / 100f },
                     modifier = Modifier.fillMaxWidth(),
                     color = FormColors.green,
-                    trackColor = Color.LightGray
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             }
         }
