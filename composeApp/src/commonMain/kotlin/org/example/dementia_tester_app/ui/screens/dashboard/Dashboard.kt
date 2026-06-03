@@ -1,5 +1,6 @@
 package org.example.dementia_tester_app.ui.screens.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +30,7 @@ fun Dashboard() {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         HorizontalMenu(
@@ -71,3 +73,4 @@ fun Dashboard() {
         }
     }
 }
+
