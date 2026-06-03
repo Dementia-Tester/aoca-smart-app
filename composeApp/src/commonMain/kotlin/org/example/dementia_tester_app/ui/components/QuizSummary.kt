@@ -1,5 +1,6 @@
 package org.example.dementia_tester_app.ui.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,6 +18,7 @@ import org.example.dementia_tester_app.data.Question
 /**
  * Summary view component to display all questions and answers (Reusable for any quiz)
  */
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun QuizSummary(
     questions: List<Question>,
@@ -117,7 +119,7 @@ fun QuizSummary(
                                     Text(
                                         text = "Score: ${question.score}",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.Gray // Kept as Gray for secondary info
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             } else {
@@ -162,7 +164,7 @@ fun QuizSummary(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = FormColors.green,
-                        contentColor = MaterialTheme.colorScheme.surface // Applied change (mapped from White)
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text("Finish")
