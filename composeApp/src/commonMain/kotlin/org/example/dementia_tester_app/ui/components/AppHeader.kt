@@ -33,12 +33,11 @@ fun AppHeader(
         color = MaterialTheme.colorScheme.primary
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start,
-            modifier = Modifier
-                .statusBarsPadding()
-                .padding(start = 5.dp, end = 5.dp, top = 10.dp, bottom = 10.dp)
-        ) {
+    verticalAlignment = Alignment.CenterVertically,
+    modifier = Modifier
+        .statusBarsPadding() 
+        .padding(start = 5.dp, end = 5.dp, top = 10.dp, bottom = 10.dp)
+) {
             TextButton(
                 onClick = {
                     scope.launch {
