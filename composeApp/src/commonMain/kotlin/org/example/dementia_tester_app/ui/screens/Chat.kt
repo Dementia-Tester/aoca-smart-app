@@ -338,12 +338,11 @@ fun ChatConversationScreen(
                     placeholder = { Text("Type a message...") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
-        imeAction = ImeAction.Send
-    ),
-    keyboardActions = KeyboardActions(
-        onSend = { handleSend() } 
-    )
-)
+                        imeAction = ImeAction.Send
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSend = { handleSend() }
+                    ),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = FormColors.green,
                         unfocusedBorderColor = FormColors.green,
@@ -376,7 +375,7 @@ fun ChatBubble(message: ChatMessage) {
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
-                .background(if (message.isFromUser) FormColors.green else Color(0xFFEFEFEF))
+                .background(if (message.isFromUser) FormColors.green else MaterialTheme.colorScheme.surfaceVariant)
                 .padding(12.dp)
                 .widthIn(max = 260.dp)
         ) {
@@ -465,3 +464,4 @@ fun ChatListItem(
         }
     }
 }
+
