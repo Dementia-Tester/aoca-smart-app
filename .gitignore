@@ -24,3 +24,7 @@ keystore.properties
 upload.jks
 iosApp/Pods/
 composeApp/composeApp.podspec
+functions/.env
+functions/node_modules/
+.env
+
