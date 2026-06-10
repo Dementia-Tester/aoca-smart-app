@@ -120,7 +120,7 @@ fun Help() {
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text("We value your feedback to improve our app.")
-                    Text("Email: feedback@dementia-tester.com")
+                    Text("Email: dementiatester@gmail.com")
                     Text("In-app: Go to Settings > Send Feedback")
                     Text("App Store: Leave a review on your app store")
                     Text("Your suggestions help us make the app better for everyone.")

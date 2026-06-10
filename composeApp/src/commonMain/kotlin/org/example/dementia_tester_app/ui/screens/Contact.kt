@@ -9,6 +9,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -21,6 +25,11 @@ import org.example.dementia_tester_app.ui.components.CollapsibleSection
 fun Contact() {
     val scrollState = rememberScrollState()
     
+    var isAppExpanded by remember { mutableStateOf(true) }
+    var isEmergencyExpanded by remember { mutableStateOf(false) }
+    var isCarerExpanded by remember { mutableStateOf(false) }
+    var isDoctorExpanded by remember { mutableStateOf(false) }
+    
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -29,28 +38,29 @@ fun Contact() {
         // App Support Section
         CollapsibleSection(
             title = "App",
-            isExpanded = true,
-            onHeaderClick = {},
+            isExpanded = isAppExpanded,
+            onHeaderClick = { isAppExpanded = !isAppExpanded },
             content = {
+                Column {
                     Text(
                         text = "App Support",
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    Text("Email: support@dementia-tester.com")
-                    Text("Phone: +61 2 1234 5678")
+                    Text("Email: dementiatester@gmail.com")
+                    Text("Phone: 0402743250")
                     Text("Hours: Monday to Friday, 9am - 5pm AEST")
                     Text("For technical issues, feature requests, or general app inquiries")
-
+                }
             }
         )
         
         // Emergency Section
-    CollapsibleSection(
-        title = "Emergency",
-        isExpanded = true,
-        onHeaderClick = {},
-        content = {
+        CollapsibleSection(
+            title = "Emergency",
+            isExpanded = isEmergencyExpanded,
+            onHeaderClick = { isEmergencyExpanded = !isEmergencyExpanded },
+            content = {
                 Column {
                     Text(
                         text = "Emergency Contacts",
@@ -66,11 +76,11 @@ fun Contact() {
         )
         
         // Carer Section
-    CollapsibleSection(
-        title = "Carer",
-        isExpanded = true,
-        onHeaderClick = {},
-        content = {
+        CollapsibleSection(
+            title = "Carer",
+            isExpanded = isCarerExpanded,
+            onHeaderClick = { isCarerExpanded = !isCarerExpanded },
+            content = {
                 Column {
                     Text(
                         text = "Carer Support",
@@ -78,7 +88,7 @@ fun Contact() {
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text("Carer Gateway: 1800 422 737")
-                    Text("Email: carers@dementia-tester.com")
+                    Text("Email: dementiatester@gmail.com")
                     Text("Website: www.carergateway.gov.au")
                     Text("Support groups, respite care information, and resources for carers")
                 }
@@ -86,11 +96,11 @@ fun Contact() {
         )
         
         // Doctor Section
-    CollapsibleSection(
-        title = "Doctor",
-        isExpanded = true,
-        onHeaderClick = {},
-        content = {
+        CollapsibleSection(
+            title = "Doctor",
+            isExpanded = isDoctorExpanded,
+            onHeaderClick = { isDoctorExpanded = !isDoctorExpanded },
+            content = {
                 Column {
                     Text(
                         text = "Medical Support",
@@ -98,7 +108,7 @@ fun Contact() {
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text("Telehealth: 1800 987 654")
-                    Text("Email: medical@dementia-tester.com")
+                    Text("Email: dementiatester@gmail.com")
                     Text("Hours: Monday to Sunday, 8am - 8pm")
                     Text("Connect with specialists, schedule appointments, or get medical advice")
                 }
